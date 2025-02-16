@@ -39,7 +39,7 @@ public class BuilderBasedFactory<T> implements Factory<T>{
 	    if(this._builders.get(info.getString("type"))!=null) {
 	    	return this._builders.get(info.getString("type")).create_instance(info.has("data") ? info.getJSONObject("data") : new JSONObject());
 	    }
-	    throw new IllegalArgumentException("Unrecognized ‘info’:" + info.toString());
+	    throw new IllegalArgumentException("Unrecognized info:" + info.toString());
 	  }
 
 	  @Override

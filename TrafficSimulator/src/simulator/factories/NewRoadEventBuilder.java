@@ -7,8 +7,8 @@ import simulator.model.Weather;
 
 public abstract class NewRoadEventBuilder extends Builder<Event>{
 
-	public NewRoadEventBuilder() {
-		super("new_road_event_e", "New Road Event");
+	public NewRoadEventBuilder(String tag) {
+		super(tag, "New Road Event");
 	}
 
 	@Override
@@ -20,7 +20,7 @@ public abstract class NewRoadEventBuilder extends Builder<Event>{
 		int length=data.getInt("length");
 		int co2limit=data.getInt("co2limit");
 		int maxspeed=data.getInt("maxspeed");
-		Weather weather=Weather.valueOf(data.getString("weather"));
+		Weather weather=Weather.valueOf(data.getString("weather").toUpperCase());
 		return create(time, id, src, dest, length, co2limit, maxspeed, weather);
 	}
 	

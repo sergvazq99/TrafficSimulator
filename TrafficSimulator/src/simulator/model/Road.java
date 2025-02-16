@@ -55,7 +55,7 @@ public abstract class Road extends SimulatedObject{
 	}
 	
 	void addContamination(int c) {
-		if(c==0) {
+		if(c<0) {
 			throw new IllegalArgumentException("c cannot be 0");
 		}
 		this.co2+=c;
@@ -94,48 +94,47 @@ public abstract class Road extends SimulatedObject{
 		JSONObject json=new JSONObject();
 		JSONArray jArray=new JSONArray();
 		
-		for(Vehicle v:vehicles) {
-			jArray.put(v.getId());
-		}
-		
 		json.put("id", _id);
 		json.put("speedlimit", limitSpeed);
 		json.put("weather", _weather);
 		json.put("co2", co2);
+		for(Vehicle v:vehicles) {
+			jArray.put(v.getId());
+		}
 		json.put("vehicles", jArray);
 		
-		return null;
+		return json;
 	}
 
-	public Junction get_srcJunc() {
+	public Junction getSrc() {
 		return _srcJunc;
 	}
 
-	public Junction get_destJunc() {
+	public Junction getDest() {
 		return _destJunc;
 	}
 
-	public int get_length() {
+	public int getLength() {
 		return _length;
 	}
 
-	public int get_maxSpeed() {
+	public int getMaxSpeed() {
 		return _maxSpeed;
 	}
 
-	public int getLimitSpeed() {
+	public int getSpeedLimit() {
 		return limitSpeed;
 	}
 
-	public int get_contLimit() {
+	public int getContLimit() {
 		return _contLimit;
 	}
 
-	public Weather get_weather() {
+	public Weather getWeather() {
 		return _weather;
 	}
 
-	public int getCo2() {
+	public int getTotalCO2() {
 		return co2;
 	}
 

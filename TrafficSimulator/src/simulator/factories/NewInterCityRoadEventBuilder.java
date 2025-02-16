@@ -7,7 +7,7 @@ import simulator.model.Weather;
 public class NewInterCityRoadEventBuilder extends NewRoadEventBuilder{
 	
 	public NewInterCityRoadEventBuilder() {
-		
+		super("new_inter_city_road");
 	}
 
 	@Override

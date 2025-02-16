@@ -24,7 +24,7 @@ public class SetContClassEvent extends Event{
 			if(map.getVehicle(pair.getFirst())==null) {
 				throw new IllegalArgumentException("the vehicle doesn't exists in the road map");
 			}
-			map.getVehicle(pair.getFirst()).setContaminationClass(pair.getSecond());
+			map.getVehicle(pair.getFirst()).setContClass(pair.getSecond());
 		}
 		
 	}}

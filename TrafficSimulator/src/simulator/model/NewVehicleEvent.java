@@ -22,6 +22,7 @@ public class NewVehicleEvent extends Event{
 	@Override
 	void execute(RoadMap map) {
 		List<Junction>junctions=new ArrayList<>();
+		
 		for(String id:this._itinerary) {
 			junctions.add(map.getJunction(id));
 		}

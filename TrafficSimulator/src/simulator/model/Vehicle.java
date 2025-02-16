@@ -1,6 +1,7 @@
 package simulator.model;
 
 import java.util.ArrayList;
+
 import java.util.Collections;
 import java.util.List;
 
@@ -17,20 +18,24 @@ public class Vehicle extends SimulatedObject{
 	private int co2;
 	private int _contClass;
 	private int distance;
-	
+	private int cont;
 
 	Vehicle(String id, int maxSpeed, int contClass, List<Junction> itinerary) {
 		  super(id);
 		  if(maxSpeed<0||contClass<0||contClass>10||itinerary.size()<2) {
 			  throw new IllegalArgumentException("Error arguments of Vehicle");
 		  }
+		  this.speed=0;
+		  
+		  this.state=VehicleStatus.PENDING;
 		  
 		  this._maxSpeed=maxSpeed;
 		  this._contClass=contClass;
-		  this._itinerary=Collections.unmodifiableList(new ArrayList<>(itinerary));
+		  this._itinerary=Collections.unmodifiableList(new ArrayList<>(itinerary));;
 		  this.location=0;
 		  this.distance=0;
 		  this.co2=0;
+		  this.cont=0;
 	}
 	
 	void setSpeed(int s) {
@@ -40,7 +45,7 @@ public class Vehicle extends SimulatedObject{
 		this.speed=Math.min(s, _maxSpeed);
 	}
 	
-	void setContaminationClass(int c) {
+	void setContClass(int c) {
 		if(c<0||c>10) {
 			throw new IllegalArgumentException("c must be between 0 and 10");
 		}
@@ -51,39 +56,55 @@ public class Vehicle extends SimulatedObject{
 	void advance(int time) {
 		if(this.state==VehicleStatus.TRAVELING) {
 			int original_location=this.location;
+			this.location=this.location+this.speed;
 			
-			//a
-			this.location=Math.min(this.location+this.speed, this.road.get_length());
+			if(this.location>this.road.getLength()) {
+				this.location=this.road.getLength();
+			}
 			
-			//b
-			int c=(this.location-original_location)*this._contClass;
+			int d=this.location-original_location;
+			this.distance+=d;
+			
+			int c=d*this._contClass;
 			this.co2+=c;
 			road.addContamination(c);
 			
-			//c
-			if(this.location>=this.road.get_length()) {
-				this.road.get_destJunc().enter(this);
+			
+			if(this.location>=this.road.getLength()) {
+				this.road.getDest().enter(this);
 				this.state=VehicleStatus.WAITING;
+				this.speed=0;
+				this.cont++;
 			}
 		}
 		
 	}
 	
-	void moveToNextRoad() { //revisar
+	void moveToNextRoad() { 
 		if(this.state!=VehicleStatus.PENDING&&this.state!=VehicleStatus.WAITING) {
 			throw new IllegalArgumentException("state must be PENDING or WAITING");
 		}
-		road.exit(this);
 		
-		int index=this._itinerary.indexOf(road.get_destJunc());
-		Junction actualJunction=this._itinerary.get(index);
+		if(road!=null||cont>0) {
+			road.exit(this);
+		}
 		
-		Road nextRoad=actualJunction.roadTo(this._itinerary.get(index+1));
-		road=nextRoad;
-		road.enter(this);
-		location=0;
-		speed=0;
-		state=VehicleStatus.TRAVELING;
+		if(cont==this._itinerary.size()-1) {
+			this.state=VehicleStatus.ARRIVED;
+			this.road=null;
+			this.speed=0;
+			this.location=0;
+		}
+		else {
+			Junction actual=this._itinerary.get(cont);
+			Junction next=this._itinerary.get(cont+1);
+			Road nextRoad=actual.roadTo(next);
+			road=nextRoad;
+			road.enter(this);
+			cont++;
+			this.state=VehicleStatus.TRAVELING;
+			this.location=0;
+		}
 	}
 
 	@Override
@@ -96,15 +117,18 @@ public class Vehicle extends SimulatedObject{
 	    json.put("co2", co2);
 	    json.put("class", _contClass);
 	    json.put("status", state.toString());
+	    if(state==VehicleStatus.PENDING||state==VehicleStatus.PENDING)
+	    json.put("road", road.getId());
+	    json.put("location", location);
 	    
 	    return json;
 	}
 
-	public List<Junction> get_itinerary() {
+	public List<Junction> getItinerary() {
 		return _itinerary;
 	}
 
-	public int get_maxSpeed() {
+	public int getMaxSpeed() {
 		return _maxSpeed;
 	}
 
@@ -112,7 +136,7 @@ public class Vehicle extends SimulatedObject{
 		return speed;
 	}
 
-	public VehicleStatus getState() {
+	public VehicleStatus getStatus() {
 		return state;
 	}
 
@@ -124,14 +148,16 @@ public class Vehicle extends SimulatedObject{
 		return location;
 	}
 
-	public int getCo2() {
+	public int getTotalCO2() {
 		return co2;
 	}
 
-	public int get_contClass() {
+	public int getContClass() {
 		return _contClass;
 	}
 	
-	
+	public int getCont() {
+		return cont;
+	}
 
 }

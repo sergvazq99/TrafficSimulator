@@ -36,35 +36,40 @@ public class RoadMap {
 	}
 	
 	void addRoad(Road r) {
-		if(this.roadsMap.containsKey(r.getId())||this.roadsMap.containsKey(r.get_destJunc().getId())||this.roadsMap.containsKey(r.get_srcJunc().getId())) {
+		if(this.roadsMap.containsKey(r.getId())) {
 			throw new IllegalArgumentException("it cannot exists a junction with the same id");
 		}
+		Junction srcJunc = r.getSrc();
+	    Junction destJunc = r.getDest();
+
+	    if (!junctionsMap.containsKey(srcJunc.getId()) || !junctionsMap.containsKey(destJunc.getId())) {
+	        throw new IllegalArgumentException("Error: Source or destination junction does not exist for road " + r.getId());
+	    }
+	    srcJunc.addOutGoingRoad(r);  
+	    destJunc.addIncommingRoad(r);
 		this.roads.add(r);
 		this.roadsMap.put(r.getId(), r);
 		
 	}
 	
 	void addVehicle(Vehicle v) {
-		
-		if(this.vehiclesMap.containsKey(v.getId())) {
-			throw new IllegalArgumentException("it cannot exists a vehicle with the same id");
-		}
-		
-		List<Junction>listJunctions=v.get_itinerary();
-		
-		for(int i=0;i<listJunctions.size();i++) {
-			Junction actual=listJunctions.get(i);
-			Junction next=listJunctions.get(i+1);
-			if(actual.roadTo(next)==null) {
-				throw new IllegalArgumentException("No road connect "+actual.getId()+" with "+next.getId());
-			}
-		}
-		
-		//existen carreteras que conecten los cruces consecutivos de su itinerario
-		
-		this.vehicles.add(v);
-		this.vehiclesMap.put(v.getId(), v);
-		
+		if (vehiclesMap.containsKey(v.getId())) {
+	        throw new IllegalArgumentException("Error: Vehicle with id " + v.getId() + " already exists.");
+	    }
+
+	    List<Junction> itinerary = v.getItinerary();
+	    
+	    for (int i = 0; i < itinerary.size()-1; i++) {
+	        Junction current = itinerary.get(i);
+	        Junction next = itinerary.get(i+1);
+	        if (current.roadTo(next) == null) {
+	            throw new IllegalArgumentException("Error: No road connects " + current.getId() + " to " + next.getId() + " in vehicle " + v.getId());
+	        }
+	    }
+
+	    vehicles.add(v); 
+	    vehiclesMap.put(v.getId(), v); 
+	    //v.moveToNextRoad();
 	}
 	
 	public Junction getJunction(String id) {
@@ -108,21 +113,21 @@ public class RoadMap {
 		
 		
 		for(Junction j:this.junctions) {
-			arrayJuntions.put(j.getId());
+			arrayJuntions.put(j.report());
 		}
 		for(Road r:this.roads) {
-			arrayRoads.put(r.getId());
+			arrayRoads.put(r.report());
 		}
 		for(Vehicle v:this.vehicles) {
-			arrayVehicles.put(v.getId());
+			arrayVehicles.put(v.report());
 		}
 		
-		json.put("junctions", arrayJuntions);
-		json.put("road", arrayRoads);
+		
+		json.put("roads", arrayRoads);
 		json.put("vehicles", arrayVehicles);
+		json.put("junctions", arrayJuntions);
 		
-		
-		return null;
+		return json;
 	}
 
 }

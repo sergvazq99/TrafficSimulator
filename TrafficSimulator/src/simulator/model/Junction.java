@@ -35,25 +35,27 @@ public class Junction extends SimulatedObject{
 		  this._yCoor=yCoor;
 		  this.inRoads=new ArrayList<>();
 		  this.outRoads=new HashMap<>();
-		  this.inGreen=0;
+		  this.queueList=new ArrayList<>();
+		  this.roadQueue=new HashMap<>();
+		  this.inGreen=-1;
 		  this.lastStep=0;
 	}
 	
 	void addIncommingRoad(Road r) {
-		if(!r.get_destJunc().equals(this)) {
+		if(r.getDest()!=this) {
 			throw new IllegalArgumentException("junction dest and actual junction must be the same");
 		}
 		this.inRoads.add(r);
-		//this.queueList.add(r.vehicles); ?
-		this.queueList.add(new LinkedList<>());
-		this.roadQueue.put(r, new LinkedList<>());
+		List<Vehicle> newQueue = new LinkedList<>();
+		this.queueList.add(newQueue);
+		this.roadQueue.put(r, newQueue);
 	}
 	
 	void addOutGoingRoad(Road r) {
-		if(!r.get_srcJunc().equals(this)||this.outRoads.containsKey(r.get_destJunc())) {
+		if(r.getSrc()!=this) {
 			throw new IllegalArgumentException("any other road goes from this to dest junction and 'r' is an exit road from actual junction ");
 		}
-		this.outRoads.put(r.get_destJunc(), r);
+		this.outRoads.put(r.getDest(), r);
 	}
 	
 	void enter(Vehicle v) {
@@ -68,17 +70,15 @@ public class Junction extends SimulatedObject{
 	@Override
 	void advance(int time) {
 		
-		//i
-		List<Vehicle>queue=this.roadQueue.get(this.inRoads.get(inGreen)); //vehículos con la carretera actual de color verde
-		
-		List<Vehicle>advance=this._dqStrategy.dequeue(queue);//lista de vehículos que deben avanzar
-		
-		for(Vehicle v:advance) { //se muevan a sus siguientes carreteras, eliminándolos de las colas correspondientes
-			v.moveToNextRoad();
-			queue.remove(v);
+		if(this.inGreen!=-1) {
+			List<Vehicle>queue=this.roadQueue.get(this.inRoads.get(inGreen)); //Consigue la cola q de la carretera con la luz verde.
+			List<Vehicle>advance=this._dqStrategy.dequeue(queue);//lista de vehículos que deben avanzar
+			for(Vehicle v: advance) {
+				v.moveToNextRoad();
+				queue.remove(v);
+			}
 		}
 		
-		//ii
 		int index=this._lsStrategy.chooseNextGreen(inRoads, queueList, inGreen, lastStep, time);
 		
 		if(index!=inGreen) {
@@ -92,9 +92,14 @@ public class Junction extends SimulatedObject{
 	public JSONObject report() {
 		JSONObject json=new JSONObject();
 		JSONArray jsonArray=new JSONArray();
-		
 		json.put("id", _id);
-		json.put("green", this.inRoads.get(inGreen).getId());
+		
+		if(inGreen==-1) {
+			json.put("green", "none");
+		}
+		else {
+			json.put("green", this.inRoads.get(inGreen).getId());
+		}
 		
 		for(Road r:this.inRoads) {
 			JSONObject queueJson=new JSONObject();

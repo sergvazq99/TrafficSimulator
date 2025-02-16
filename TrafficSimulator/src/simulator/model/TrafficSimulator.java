@@ -31,8 +31,9 @@ public class TrafficSimulator {
 		//ii
 		Iterator<Event>iterator=this.eventsPriority.iterator();
 		while(iterator.hasNext()) {
-			if(iterator.next().getTime()==time) {
-				iterator.next().execute(roadMap);
+			Event e=iterator.next();
+			if(e.getTime()==time) {
+				e.execute(roadMap);
 				iterator.remove();
 			}
 		}
