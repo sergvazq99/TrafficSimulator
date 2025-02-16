@@ -117,9 +117,10 @@ public class Vehicle extends SimulatedObject{
 	    json.put("co2", co2);
 	    json.put("class", _contClass);
 	    json.put("status", state.toString());
-	    if(state==VehicleStatus.PENDING||state==VehicleStatus.PENDING)
-	    json.put("road", road.getId());
-	    json.put("location", location);
+	    if(state == VehicleStatus.TRAVELING || state == VehicleStatus.WAITING) {
+		    json.put("road", road.getId());
+		    json.put("location", location);
+	    }
 	    
 	    return json;
 	}
