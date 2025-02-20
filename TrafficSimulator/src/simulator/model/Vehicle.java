@@ -22,7 +22,7 @@ public class Vehicle extends SimulatedObject{
 
 	Vehicle(String id, int maxSpeed, int contClass, List<Junction> itinerary) {
 		  super(id);
-		  if(maxSpeed<0||contClass<0||contClass>10||itinerary.size()<2) {
+		  if(maxSpeed<=0||contClass<0||contClass>10||itinerary.size()<2) {
 			  throw new IllegalArgumentException("Error arguments of Vehicle");
 		  }
 		  this.speed=0;
@@ -81,30 +81,34 @@ public class Vehicle extends SimulatedObject{
 	}
 	
 	void moveToNextRoad() { 
-		if(this.state!=VehicleStatus.PENDING&&this.state!=VehicleStatus.WAITING) {
-			throw new IllegalArgumentException("state must be PENDING or WAITING");
-		}
-		
-		if(road!=null||cont>0) {
-			road.exit(this);
-		}
-		
-		if(cont==this._itinerary.size()-1) {
-			this.state=VehicleStatus.ARRIVED;
-			this.road=null;
-			this.speed=0;
-			this.location=0;
-		}
-		else {
-			Junction actual=this._itinerary.get(cont);
-			Junction next=this._itinerary.get(cont+1);
-			Road nextRoad=actual.roadTo(next);
-			road=nextRoad;
-			road.enter(this);
-			cont++;
-			this.state=VehicleStatus.TRAVELING;
-			this.location=0;
-		}
+		if (this.state != VehicleStatus.PENDING && this.state != VehicleStatus.WAITING) {
+	        throw new IllegalStateException("The vehicle must be in PENDING or WAITING state.");
+	    }
+
+	    // Si el vehículo no está en una carretera, lo asignamos a la primera carretera de su itinerario.
+	    if (this.road == null) {
+	        // Si el vehículo no está en una carretera, asignamos la primera carretera del itinerario
+	        Junction currentJunction = this._itinerary.get(cont);
+	        Road nextRoad = currentJunction.roadTo(this._itinerary.get(cont + 1));
+	        this.road = nextRoad; // Asignamos la carretera
+
+	        // Cambiar estado a TRAVELING y poner la ubicación en 0
+	        this.state = VehicleStatus.TRAVELING;
+	        this.location = 0;
+	    } else {
+	        // Si ya está en una carretera, llama a exit en la carretera actual y mueve al siguiente cruce
+	        this.road.exit(this);
+	        cont++; // Avanzamos al siguiente cruce en el itinerario
+
+	        // Ahora que ha salido de la carretera actual, entra en la siguiente carretera
+	        Junction nextJunction = this._itinerary.get(cont);
+	        Road nextRoad = nextJunction.roadTo(this.road.getDest());
+	        this.road = nextRoad; // Asignamos la siguiente carretera
+
+	        // Cambiar estado a TRAVELING
+	        this.state = VehicleStatus.TRAVELING;
+	        this.location = 0; // Colocamos al vehículo al principio de la carretera
+	    }
 	}
 
 	@Override

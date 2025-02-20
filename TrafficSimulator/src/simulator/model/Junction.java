@@ -59,7 +59,8 @@ public class Junction extends SimulatedObject{
 	}
 	
 	void enter(Vehicle v) {
-		List<Vehicle> queue=this.roadQueue.get(v.getRoad());
+		Road r=v.getRoad();
+		List<Vehicle> queue = this.roadQueue.get(r);
 		queue.add(v);
 	}
 	
@@ -75,7 +76,9 @@ public class Junction extends SimulatedObject{
 			List<Vehicle>advance=this._dqStrategy.dequeue(queue);//lista de vehículos que deben avanzar
 			for(Vehicle v: advance) {
 				v.moveToNextRoad();
+				
 				queue.remove(v);
+				
 			}
 		}
 		

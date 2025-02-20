@@ -22,7 +22,7 @@ public abstract class Road extends SimulatedObject{
 
 	Road(String id, Junction srcJunc, Junction destJunc, int maxSpeed, int contLimit, int length, Weather weather) {
 		  super(id);
-		  if(maxSpeed<0||contLimit<0||length<0||srcJunc==null||destJunc==null||weather==null) {
+		  if(maxSpeed<=0||contLimit<0||length<=0||srcJunc==null||destJunc==null||weather==null) {
 			  throw new IllegalArgumentException("Error arguments of Road");
 		  }
 		  this._srcJunc=srcJunc;
@@ -37,7 +37,7 @@ public abstract class Road extends SimulatedObject{
 	}
 	
 	void enter(Vehicle v) {
-		if(v.getSpeed()!=0||v.getLocation()!=0) {
+		if(v.getSpeed()!=0&&v.getLocation()!=0) {
 			 throw new IllegalArgumentException("speed and location of vehicle must be 0");
 		}
 		this.vehicles.add(v);
@@ -96,7 +96,7 @@ public abstract class Road extends SimulatedObject{
 		
 		json.put("id", _id);
 		json.put("speedlimit", limitSpeed);
-		json.put("weather", _weather);
+		json.put("weather", _weather.toString());
 		json.put("co2", co2);
 		for(Vehicle v:vehicles) {
 			jArray.put(v.getId());

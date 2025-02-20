@@ -42,7 +42,7 @@ public class RoadMap {
 		Junction srcJunc = r.getSrc();
 	    Junction destJunc = r.getDest();
 
-	    if (!junctionsMap.containsKey(srcJunc.getId()) || !junctionsMap.containsKey(destJunc.getId())) {
+	    if (!junctionsMap.containsKey(srcJunc.getId()) && !junctionsMap.containsKey(destJunc.getId())) {
 	        throw new IllegalArgumentException("Error: Source or destination junction does not exist for road " + r.getId());
 	    }
 	    srcJunc.addOutGoingRoad(r);  
@@ -69,7 +69,6 @@ public class RoadMap {
 
 	    vehicles.add(v); 
 	    vehiclesMap.put(v.getId(), v); 
-	    //v.moveToNextRoad();
 	}
 	
 	public Junction getJunction(String id) {
@@ -122,10 +121,10 @@ public class RoadMap {
 			arrayVehicles.put(v.report());
 		}
 		
-		
+		json.put("junctions", arrayJuntions);
 		json.put("roads", arrayRoads);
 		json.put("vehicles", arrayVehicles);
-		json.put("junctions", arrayJuntions);
+		
 		
 		return json;
 	}

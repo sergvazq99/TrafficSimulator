@@ -1,5 +1,6 @@
 package simulator.model;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import simulator.misc.Pair;
@@ -13,7 +14,7 @@ public class SetContClassEvent extends Event{
 		  if(cs==null) {
 			  throw new IllegalArgumentException("cs is null");
 		  }
-		  this._cs=cs;
+		  this._cs=new ArrayList<>(cs);
 	}
 
 
