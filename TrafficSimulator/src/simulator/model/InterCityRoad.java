@@ -1,55 +1,39 @@
 package simulator.model;
 
-public class InterCityRoad extends Road{
-	
-	InterCityRoad(String id, Junction srcJunc, Junction destJunc, int maxSpeed, int contLimit, int length, Weather weather){
-		super(id,srcJunc,destJunc,maxSpeed,contLimit,length,weather);
+public class InterCityRoad extends Road {
+
+	InterCityRoad(String id, Junction srcJunc, Junction destJunc, int maxSpeed, int contLimit, int length, Weather weather) throws IllegalArgumentException {
+		super(id, srcJunc, destJunc, maxSpeed, contLimit, length, weather);
 	}
 
 	@Override
-	void reduceTotalContamination() {
-		int x=0;
+	void reduceTotalContamination() throws IllegalArgumentException{
+		// Contaminacion = ((100-x)*tc)/100 tc = contaminacion actual
+		int x;
+		if (getWeather() == Weather.SUNNY) x = 2;
+		else if (getWeather() == Weather.CLOUDY) x = 3;
+		else if (getWeather() == Weather.RAINY) x = 10;
+		else if (getWeather() == Weather.WINDY) x = 15;
+		else if (getWeather() == Weather.STORM) x = 20;
+		else throw new IllegalArgumentException("Weather does not exist (reduceCO2)");
 		
-		switch(this.getWeather()) {
-			case SUNNY:
-				x=2;
-				break;
-			case CLOUDY:
-				x=3;
-				break;
-			case RAINY:
-				x=10;
-				break;
-			case WINDY:
-				x=15;
-				break;
-			case STORM:
-				x=20;
-				break;
-		}
-		
-		int value=((100-x)*this.getTotalCO2())/100;
-		this.addContamination(this.getTotalCO2()-value);
+		setTotalCO2(((100-x)*getTotalCO2())/100);
 	}
 
 	@Override
 	void updateSpeedLimit() {
-		if(this.getTotalCO2()>this.getContLimit()) {
-			this.limitSpeed=this.getMaxSpeed()/2;
-		}
-		else {
-			this.limitSpeed=this.getMaxSpeed();
-		}
-		
+		if (getTotalCO2() > getContLimit())
+			setSpeedLimit(getMaxSpeed()/2);
+		else
+			setSpeedLimit(getSpeedLimit());
 	}
 
 	@Override
 	int calculateVehicleSpeed(Vehicle v) {
-		int speed=this.getSpeedLimit();
-		if(this.getWeather()==Weather.STORM) {
-			speed=(speed*8)/10;
-		}
-		return speed;
+		int reduceTo = getSpeedLimit();
+		if (getWeather() == Weather.STORM)
+			reduceTo = (reduceTo*8)/10; // Si no quieres que se apliquen ambas => reduceTo = (getMaxSpeed()*8)/10
+		return reduceTo;
 	}
 
 }

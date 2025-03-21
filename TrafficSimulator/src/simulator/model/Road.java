@@ -2,146 +2,172 @@ package simulator.model;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 
-import org.json.JSONArray;
 import org.json.JSONObject;
+
 
 public abstract class Road extends SimulatedObject{
 	
-	protected Junction _srcJunc;
-	protected Junction _destJunc;
-	protected int _length;
-	protected int _maxSpeed;
-	protected int limitSpeed;
-	protected int _contLimit;
-	protected Weather _weather;
-	protected int co2;
-	protected List<Vehicle> vehicles;
-
-	Road(String id, Junction srcJunc, Junction destJunc, int maxSpeed, int contLimit, int length, Weather weather) {
-		  super(id);
-		  if(maxSpeed<=0||contLimit<0||length<=0||srcJunc==null||destJunc==null||weather==null) {
-			  throw new IllegalArgumentException("Error arguments of Road");
-		  }
-		  this._srcJunc=srcJunc;
-		  this._destJunc=destJunc;
-		  this._maxSpeed=maxSpeed;
-		  this._contLimit=contLimit;
-		  this._length=length;
-		  this._weather=weather;
-		  this.limitSpeed=0;
-		  this.co2=0;
-		  this.vehicles=new ArrayList<>();
+	private List<Vehicle> vehicles;
+	
+	private Junction junc_origin;
+	private Junction junc_dest;
+	
+	private int length;
+	private int speed_limit;
+	private int act_speed_limit;
+	
+	private int max_pollution;
+	private int total_pollution;
+	private Weather weather;
+	
+	
+	Road(String id, Junction srcJunc, Junction destJunc, int maxSpeed, int contLimit, int length, Weather weather) 
+		throws IllegalArgumentException{
+		super(id);
+		if (maxSpeed <= 0)
+			throw new IllegalArgumentException("maxSpeed must be positive");
+		else
+			speed_limit = maxSpeed;
+		if (contLimit <= 0) 
+			throw new IllegalArgumentException("the limit to contamination must be positive");
+		else
+			max_pollution = contLimit;
+		if (length <= 0)
+			throw new IllegalArgumentException("the lenght of the road must be positive");
+		else 
+			this.length = length;
+		if (destJunc == null)
+			throw new IllegalArgumentException("the destination Junction can't be null");
+		else {
+			junc_dest = destJunc;
+			junc_dest.addIncommingRoad(this);
+		}
+		if (srcJunc == null)
+			throw new IllegalArgumentException("the origin Junction can't be null");
+		else {
+			junc_origin = srcJunc; 
+			junc_origin.addOutGoingRoad(this);
+		}
+		if (weather == null)
+			throw new IllegalArgumentException("the weather can't be null");
+		else
+			this.weather = weather;
+		
+		act_speed_limit = speed_limit;
+		total_pollution = 0;
+		vehicles = new ArrayList<>();
 	}
 	
-	void enter(Vehicle v) {
-		if(v.getSpeed()!=0&&v.getLocation()!=0) {
-			 throw new IllegalArgumentException("speed and location of vehicle must be 0");
+	void enter(Vehicle v) throws IllegalArgumentException{
+		if (v.getLocation() == 0 && v.getSpeed() == 0) {
+			vehicles.add(v);
+		}else {
+			throw new IllegalArgumentException("Can't insert vehicle is location and/or speed aren't 0");
 		}
-		this.vehicles.add(v);
 	}
 	
 	void exit(Vehicle v) {
-		this.vehicles.remove(v);
-	}
-	
-	void setWeather(Weather w) {
-		if(w==null) {
-			throw new IllegalArgumentException("weather cannot be null");
+		for (int i = vehicles.size()-1; i >= 0; i--) { // Se puede cambiar a un while
+			if (v.getId() == vehicles.get(i).getId()) {
+				vehicles.remove(i);
+				break;
+			}
 		}
-		this._weather=w;
 	}
 	
-	void addContamination(int c) {
-		if(c<0) {
-			throw new IllegalArgumentException("c cannot be 0");
-		}
-		this.co2+=c;
+	void setWeather(Weather w) throws IllegalArgumentException{
+		if (w == null)
+			throw new IllegalArgumentException("the weather can`t be null");
+		else
+			weather = w;
 	}
 	
-	abstract void reduceTotalContamination();
-	
-	abstract void updateSpeedLimit();
-	
-	abstract int calculateVehicleSpeed(Vehicle v);
-	
-	
-
-	@Override
-	void advance(int time) {
-		//a
-		this.reduceTotalContamination();
-		
-		//b
-		this.updateSpeedLimit();
-		
-		//c
-		for(Vehicle v: vehicles) {
-			
-			v.setSpeed(calculateVehicleSpeed(v));
-			v.advance(time);
-			
-		}
-
-		Collections.sort(this.vehicles, Comparator.comparingInt(Vehicle->Vehicle.getLocation())); //ordena la lista de vehículos por su localización 
-		
+	void setSpeedLimit(int v) throws IllegalArgumentException {
+		if (v < 0)
+			throw new IllegalArgumentException("the speed must be positive (set Road)");
+		else
+			act_speed_limit = v;
 	}
-
-	@Override
-	public JSONObject report() {
-		JSONObject json=new JSONObject();
-		JSONArray jArray=new JSONArray();
-		
-		json.put("id", _id);
-		json.put("speedlimit", limitSpeed);
-		json.put("weather", _weather.toString());
-		json.put("co2", co2);
-		for(Vehicle v:vehicles) {
-			jArray.put(v.getId());
-		}
-		json.put("vehicles", jArray);
-		
-		return json;
+	
+	void setTotalCO2(int c) throws IllegalArgumentException {
+		if (c < 0)
+			throw new IllegalArgumentException("the contamination must be positive (set Road)");
+		else
+			total_pollution = c;
 	}
-
-	public Junction getSrc() {
-		return _srcJunc;
+	
+	void addContamination(int c) throws IllegalArgumentException {
+		if (c < 0) 
+			throw new IllegalArgumentException("the contamination to add to the road must be positive");
+		else
+			total_pollution += c;
 	}
-
-	public Junction getDest() {
-		return _destJunc;
-	}
-
+	
 	public int getLength() {
-		return _length;
+		return length;
 	}
-
-	public int getMaxSpeed() {
-		return _maxSpeed;
+	public Junction getSrc() {
+		return junc_origin;
 	}
-
-	public int getSpeedLimit() {
-		return limitSpeed;
+	public Junction getDest() {
+		return junc_dest;
 	}
-
-	public int getContLimit() {
-		return _contLimit;
-	}
-
 	public Weather getWeather() {
-		return _weather;
+		return weather;
 	}
-
+	public int getContLimit() {
+		return max_pollution;
+	}
 	public int getTotalCO2() {
-		return co2;
+		return total_pollution;
 	}
-
-	public List<Vehicle> getVehicles() {
+	public int getMaxSpeed() {
+		return speed_limit;
+	}
+	public int getSpeedLimit() {
+		return act_speed_limit;
+	}
+	public List<Vehicle> getVehicles(){
 		return Collections.unmodifiableList(vehicles);
 	}
 	
+	// Metodos abstractos
+	abstract void reduceTotalContamination() throws IllegalArgumentException;
+	abstract void updateSpeedLimit();
+	abstract int calculateVehicleSpeed(Vehicle v);
 	
+	// Metodos de actualizar	
+	@Override
+	void advance(int time) {
+		// Actualizamos datos de la carretera
+		reduceTotalContamination();
+		updateSpeedLimit();
+		
+		// Actualizamos vehiculos
+		for (Vehicle v: vehicles) {
+			v.setSpeed(calculateVehicleSpeed(v));
+			v.advance(time);
+		}
+		
+		// Ordenamos lista de vehiculos por location
+		Collections.sort(vehicles, new VehicleComparator());
+	}
+
+	// Metodos de JSON
+	@Override
+	public JSONObject report() {
+		JSONObject json = new JSONObject();
+		json.put("id", this.getId());
+		json.put("speedlimit", act_speed_limit);
+		json.put("weather", weather.toString());
+		json.put("co2", total_pollution);
+		List<String> vehicle_ids = new ArrayList<>();
+		for(int i = 0; i < vehicles.size(); i++)
+			vehicle_ids.add(vehicles.get(i).getId());
+		json.put("vehicles", vehicle_ids);
+		return json;
+	}
 
 }

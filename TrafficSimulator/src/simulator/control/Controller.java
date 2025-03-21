@@ -10,52 +10,72 @@ import org.json.JSONTokener;
 
 import simulator.factories.Factory;
 import simulator.model.Event;
+import simulator.model.TrafficSimObserver;
 import simulator.model.TrafficSimulator;
 
 public class Controller {
 	
-	private TrafficSimulator _trafficSimulator;
-	private Factory<Event> _eventsFactory;
+	private TrafficSimulator simulator;
+	private Factory<Event> event_factory;
 	
 	public Controller(TrafficSimulator sim, Factory<Event> eventsFactory) {
-		if(sim==null||eventsFactory==null) {
-			throw new IllegalArgumentException("error in controller, sim or eventsFactory are null");
-		}
-		  this._trafficSimulator=sim;
-		  this._eventsFactory=eventsFactory;
+		if (sim == null)
+			throw new IllegalArgumentException("The TrafficSimulator is null");
+		else
+			simulator = sim;
+		if(eventsFactory == null)
+			throw new IllegalArgumentException("The event factory is null");
+		else
+			event_factory = eventsFactory;
 	}
 	
-	public void loadEvents(InputStream in) {
-		if(in==null) {
-			throw new IllegalArgumentException("input cannot be null");
-		}
-		JSONObject jo = new JSONObject(new JSONTokener(in));
-		JSONArray array=jo.getJSONArray("events");
-		for(int i=0;i<array.length();i++) {
-			Event e=this._eventsFactory.create_instance(array.getJSONObject(i));
-			this._trafficSimulator.addEvent(e);
-		}
+	public  void loadEvents(InputStream in) {
+		JSONObject json = new JSONObject(new JSONTokener(in));
+		
+		if(json.has("events")) {
+			JSONArray json_events = json.getJSONArray("events");
+			for(int i = 0; i < json_events.length(); i++) {
+				Event e = event_factory.create_instance(json_events.getJSONObject(i));
+				simulator.addEvent(e);
+			}
+		}else
+			throw new IllegalArgumentException("The Input given does not have the required format");
 	}
 	
 	public void run(int n, OutputStream out) {
 		PrintStream p = new PrintStream(out);
-		p.print("{");
-		p.print("  \"states\": [");
-		for(int i=0;i<n-1;i++) {
-			this._trafficSimulator.advance();
-			p.print(this._trafficSimulator.report());
-			p.print(",");
+		p.println("{");
+		p.println("  \"states\": [");
+		for(int i = 0; i < n; i++) {
+			simulator.advance();
+			p.print(simulator.report());
+			if (i < n-1)
+				p.print(",\n");
 		}
-		if(n>0) {
-			this._trafficSimulator.advance();
-			p.print(this._trafficSimulator.report());
-		}
-		p.print("]");
-		p.print("}");
+		p.println("]");
+		p.println("}");
 	}
 	
 	public void reset() {
-		this._trafficSimulator.reset();
+		simulator.reset();
 	}
-
+	
+	public void addObserver(TrafficSimObserver o) {
+		simulator.addObserver(o);
+	}
+	
+	public void removeObserver(TrafficSimObserver o) {
+		simulator.removeObserver(o);
+	}
+	
+	public void addEvent(Event e) {
+		simulator.addEvent(e);
+	}
+	
+	public void run(int n) {
+		for(int i=0;i<n;i++) {
+			simulator.advance();
+		}
+	}
+	
 }

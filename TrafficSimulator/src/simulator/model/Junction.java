@@ -1,5 +1,6 @@
 package simulator.model;
 
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -9,118 +10,152 @@ import java.util.Map;
 import org.json.JSONArray;
 import org.json.JSONObject;
 
-public class Junction extends SimulatedObject{
+public class Junction extends SimulatedObject {
 	
+	private List<Road> roads; // Carreteras entrantes
+	private Map<Junction, Road> dest_road; // Carreteras Salientes
+	private List<List<Vehicle>> queues; // Colas del cruce
 	
-	private List<Road> inRoads;
-	private Map<Junction,Road> outRoads;
-	private List<List<Vehicle>> queueList;
-	private Map<Road,List<Vehicle>> roadQueue;
-	private int inGreen;
-	private int lastStep;
-	private LightSwitchingStrategy _lsStrategy;
-	private DequeuingStrategy _dqStrategy;
-	private int _xCoor;
-	private int _yCoor;
+	private int curr_green;
+	private int last_green; // Ultimo paso de cambio de semaforo
 	
-
-	Junction(String id, LightSwitchingStrategy lsStrategy, DequeuingStrategy dqStrategy, int xCoor, int yCoor) {
+	private LightSwitchingStrategy light_strategy;
+	private DequeuingStrategy queue_strategy;
+	
+	private int x;
+	private int y;
+	
+	Junction(String id, LightSwitchingStrategy lsStrategy, DequeuingStrategy dqStrategy, int xCoor, int yCoor) 
+			throws IllegalArgumentException{
 		  super(id);
-		  if(lsStrategy==null||dqStrategy==null||xCoor<0||yCoor<0) {
-			  throw new IllegalArgumentException("Error arguments of Junction");
-		  }
-		  this._lsStrategy=lsStrategy;
-		  this._dqStrategy=dqStrategy;
-		  this._xCoor=xCoor;
-		  this._yCoor=yCoor;
-		  this.inRoads=new ArrayList<>();
-		  this.outRoads=new HashMap<>();
-		  this.queueList=new ArrayList<>();
-		  this.roadQueue=new HashMap<>();
-		  this.inGreen=-1;
-		  this.lastStep=0;
-	}
-	
-	void addIncommingRoad(Road r) {
-		if(r.getDest()!=this) {
-			throw new IllegalArgumentException("junction dest and actual junction must be the same");
+		  
+		  if (lsStrategy != null)
+			  light_strategy = lsStrategy;
+		  else
+			  throw new IllegalArgumentException("LightSwitchStrategy is null");
+		  
+		  if (dqStrategy != null)
+			  queue_strategy = dqStrategy;
+		  else
+			  throw new IllegalArgumentException("DequeuingStrategy is null");
+		  
+		  if (xCoor >= 0 && yCoor >= 0) {
+			  x = xCoor;
+			  y = yCoor;
+		  }else
+			  throw new IllegalArgumentException("Positions must be positive");
+		  
+		  curr_green = -1; // Revisar si esto es asi
+		  last_green = 0;
+		  roads = new ArrayList<>();
+		  dest_road = new HashMap<>();
+		  queues = new ArrayList<>();
 		}
-		this.inRoads.add(r);
-		List<Vehicle> newQueue = new LinkedList<>();
-		this.queueList.add(newQueue);
-		this.roadQueue.put(r, newQueue);
-	}
 	
-	void addOutGoingRoad(Road r) {
-		if(r.getSrc()!=this) {
-			throw new IllegalArgumentException("any other road goes from this to dest junction and 'r' is an exit road from actual junction ");
+	//* Añadir carreteras
+	void addIncommingRoad(Road r) throws IllegalArgumentException{
+		if (r.getDest().getId() == this.getId()) { // Revisamos que la carretera tenga como destino este cruce
+			roads.add(r); // Se añade al final de las carreteras entrantes
+			
+			
+			List<Vehicle> queue = new LinkedList<>(); 
+			queues.add(queue);
 		}
-		this.outRoads.put(r.getDest(), r);
+		else
+			throw new IllegalArgumentException("The road to add needs to end at this Junction: " + this.getId());
 	}
 	
-	void enter(Vehicle v) {
-		Road r=v.getRoad();
-		List<Vehicle> queue = this.roadQueue.get(r);
-		queue.add(v);
+	void addOutGoingRoad(Road r) throws IllegalArgumentException{
+		if (r.getSrc().getId() == this.getId()) { // Revisamos que la carretera tenga como origen este cruce
+			if(dest_road.containsKey(r.getDest()))
+				throw new IllegalArgumentException("OutGoingRoad ends in the same Junction as another road in this Junction: " + r.getDest());
+			// Si no salta la excepcion
+			dest_road.put(r.getDest(), r);
+		}
+		else
+			throw new IllegalArgumentException("The road to add needs to start at this Junction: " + this.getId());
 	}
 	
-	Road roadTo(Junction j) {
-		return this.outRoads.get(j);
+	// Otras metodos
+	void enter(Vehicle v) throws IllegalArgumentException{
+		int i = 0;
+		boolean esta = false;
+		while (!esta && i < roads.size()) {
+			if (roads.get(i).getId() == v.getRoad().getId()) {
+				queues.get(i).add(v);
+				esta = true;
+			}
+			i++;
+		}
+		if (!esta) throw new IllegalArgumentException("Vehicle does not have this junction as its destination");
 	}
-
+	
+	Road roadTo(Junction j) throws IllegalArgumentException{
+		for(Map.Entry<Junction, Road> entry: dest_road.entrySet()) {
+			if (entry.getKey().getId() == j.getId())
+				return entry.getValue();
+		}
+		return null;
+	}
+	
 	@Override
 	void advance(int time) {
-		
-		if(this.inGreen!=-1) {
-			List<Vehicle>queue=this.roadQueue.get(this.inRoads.get(inGreen)); //Consigue la cola q de la carretera con la luz verde.
-			List<Vehicle>advance=this._dqStrategy.dequeue(queue);//lista de vehículos que deben avanzar
-			for(Vehicle v: advance) {
-				v.moveToNextRoad();
-				
-				queue.remove(v);
-				
+		if (curr_green > -1) {
+			List<Vehicle> v = new ArrayList<>();
+			// Movemos los coches de la cola curr_green
+			v = queue_strategy.dequeue(queues.get(curr_green));
+			for (int i = 0; i < v.size(); i++) {
+				v.get(i).moveToNextRoad();
+				queues.get(curr_green).remove(i);
 			}
 		}
-		
-		int index=this._lsStrategy.chooseNextGreen(inRoads, queueList, inGreen, lastStep, time);
-		
-		if(index!=inGreen) {
-			this.inGreen=index;
-			this.lastStep=time;
+		// Cambiamos los semaforos
+		int change = light_strategy.chooseNextGreen(roads, queues, curr_green, last_green, time);
+		if (change != curr_green) {
+			last_green = time;
+			curr_green = change;
 		}
-		
 	}
 
 	@Override
 	public JSONObject report() {
-		JSONObject json=new JSONObject();
-		JSONArray jsonArray=new JSONArray();
-		json.put("id", _id);
-		
-		if(inGreen==-1) {
-			json.put("green", "none");
-		}
-		else {
-			json.put("green", this.inRoads.get(inGreen).getId());
-		}
-		
-		for(Road r:this.inRoads) {
-			JSONObject queueJson=new JSONObject();
-			queueJson.put("road", r.getId());
-			
-			JSONArray jArray=new JSONArray();
-			
-			for(Vehicle v: this.roadQueue.get(r)) {
-				jArray.put(v.getId());
+		JSONObject json = new JSONObject();
+		json.put("id", getId());
+		json.put("green", (curr_green == -1)? "none" : roads.get(curr_green).getId() );
+		JSONArray json_queues = new JSONArray();
+		for(int i = 0; i < queues.size(); i++) {
+			JSONObject json_roads = new JSONObject();
+			json_roads.put("road", roads.get(i).getId());
+			List<String> vehicle_ids = new ArrayList<>();
+			for(int j = 0; j < queues.get(i).size(); j++) {
+				vehicle_ids.add(queues.get(i).get(j).getId());
 			}
+			json_roads.put("vehicles", vehicle_ids);
 			
-			queueJson.put("vehicles", jArray);
-			jsonArray.put(queueJson);
+			json_queues.put(json_roads);
 		}
-		
-		json.put("queues", jsonArray);
-		
+		json.put("queues", json_queues);
 		return json;
 	}
 
+	public int getX() {
+		return x;
+	}
+
+	public int getY() {
+		return y;
+	}
+
+	public int getGreenLightIndex() {
+		return curr_green;
+	}
+
+	public List<Road> getInRoads() {
+		return roads;
+	}
+
+	public List<List<Vehicle>> getQueues() {
+		return queues;
+	}
+	
 }

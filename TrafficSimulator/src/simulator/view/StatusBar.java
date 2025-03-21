@@ -19,9 +19,12 @@ public class StatusBar extends JPanel implements TrafficSimObserver{
 	 */
 	private static final long serialVersionUID = 1L;
 	private Controller _ctrl;
+	private JLabel timeLabel=new JLabel("Time: ");
+	private JLabel eventLabel=new JLabel("Welcome!");
 	
 	StatusBar(Controller ctrl){
 		this._ctrl=ctrl;
+		this._ctrl.addObserver(this);
 		initGUI();
 	}
 	
@@ -29,38 +32,34 @@ public class StatusBar extends JPanel implements TrafficSimObserver{
 		this.setLayout(new BoxLayout(this,BoxLayout.X_AXIS));
 		JPanel mainPanel=new JPanel(new GridLayout(1,2));
 		
-		JLabel time=new JLabel("Time: ");
-		JLabel event=new JLabel("Event added: ");
-		
-		mainPanel.add(time);
-		mainPanel.add(event);
+		mainPanel.add(timeLabel);
+		mainPanel.add(eventLabel);
 		
 		this.add(mainPanel);
-		
 		this.setVisible(true);
 	}
 
 	@Override
 	public void onAdvance(RoadMap map, Collection<Event> events, int time) {
-		// TODO Auto-generated method stub
-		
+		this.timeLabel.setText("Time: "+String.valueOf(time));
+		this.eventLabel.setText(null);
 	}
 
 	@Override
 	public void onEventAdded(RoadMap map, Collection<Event> events, Event e, int time) {
-		// TODO Auto-generated method stub
-		
+		this.timeLabel.setText("Time: "+String.valueOf(time));
+		this.eventLabel.setText("Event added "+e);
 	}
 
 	@Override
 	public void onReset(RoadMap map, Collection<Event> events, int time) {
-		// TODO Auto-generated method stub
+		this.timeLabel.setText("Time: "+String.valueOf(0));
 		
 	}
 
 	@Override
 	public void onRegister(RoadMap map, Collection<Event> events, int time) {
-		// TODO Auto-generated method stub
+		this.timeLabel.setText("Time: "+String.valueOf(time));
 		
 	}
 	

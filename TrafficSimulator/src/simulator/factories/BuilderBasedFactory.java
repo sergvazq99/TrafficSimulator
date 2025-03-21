@@ -8,43 +8,48 @@ import java.util.Map;
 
 import org.json.JSONObject;
 
-public class BuilderBasedFactory<T> implements Factory<T>{
+public class BuilderBasedFactory<T> implements Factory<T> {
+	/* Atributos */
+	private Map<String, Builder<T>> builders;
+	private List<JSONObject> builders_info;
+	
+	// Constructoras public
+	public BuilderBasedFactory() {
+		builders = new HashMap<>();
+		builders_info = new LinkedList<>();
+	}
+	
+	public BuilderBasedFactory(List<Builder<T>> builders) {
+		this();
+		// call add_builder(b) for each builder b in builder
+		for(Builder<T> b: builders) {
+			add_builder(b);
+		}
+	}
 
-	private Map<String, Builder<T>> _builders;
-	private List<JSONObject> _builders_info;
+	// Otros metodos
+	public void add_builder(Builder<T> b) {
+		builders.put(b.get_type_tag(), b);
+		builders_info.add(b.get_info());
+	}
+	
+	// De la interfaz
+	@Override
+	public T create_instance(JSONObject info) {
+		if(info == null)
+			throw new IllegalArgumentException("'info' cannot be null");
+		
+		Builder<T> b = builders.get(info.getString("type"));
+		T object = b.create_instance(info.has("data")? info.getJSONObject("data") : new JSONObject());
+		if (object == null)
+			throw new IllegalArgumentException("Unrecognized ‘info’:" + info.toString());
+		return object;
+		
+	}
 
-
-	  public BuilderBasedFactory() {
-	    this._builders=new HashMap<>();
-	    this._builders_info=new LinkedList<>();
-	  }
-
-	  public BuilderBasedFactory(List<Builder<T>> builders) {
-	    this();
-	    for(Builder<T> builder: builders) {
-	    	add_builder(builder);
-	    }
-	  }
-
-	  public void add_builder(Builder<T> b) {
-		this._builders.put(b.get_type_tag(), b);
-		this._builders_info.add(b.get_info());
-	  }
-
-	  @Override
-	  public T create_instance(JSONObject info) {
-	    if (info == null) {
-	      throw new IllegalArgumentException("’info’ cannot be null");
-	    }
-	    if(this._builders.get(info.getString("type"))!=null) {
-	    	return this._builders.get(info.getString("type")).create_instance(info.has("data") ? info.getJSONObject("data") : new JSONObject());
-	    }
-	    throw new IllegalArgumentException("Unrecognized info:" + info.toString());
-	  }
-
-	  @Override
-	  public List<JSONObject> get_info() {
-	    return Collections.unmodifiableList(_builders_info);
-	  }
+	@Override
+	public List<JSONObject> get_info() {
+		return Collections.unmodifiableList(builders_info);
+	}
 
 }

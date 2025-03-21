@@ -1,34 +1,44 @@
 package simulator.model;
 
 public abstract class Event implements Comparable<Event> {
+	/* Atributos */
+	// Private
+	private static long counter = 0;
+	
+	//protected
+	protected int time;
+	protected long time_stamp;
+	
+	// Constructora package protected
+	Event(int time) throws IllegalArgumentException{
+		if(time < 1)
+			throw new IllegalArgumentException("Invalid time: " + time);
+		else {
+			this.time = time;
+			this.time_stamp = counter++; 
+		}
+	}
+	
+	//Getter
+	public int getTime() {
+		return time;
+	}
+	
+	// Abstractas
+	abstract void execute(RoadMap map);
+	
+	@Override
+	public int compareTo(Event o) {
+		if (this.time > o.time)
+			return 1;
+		else if (this.time < o.time)
+			return -1;
+		else {
+			if (this.time_stamp > o.time_stamp)
+				return 1;
+			else // En el caso de que tenga tanto el time como timestamp iguales se devuelve -1
+				return -1;
+		}
+	}
 
-  private static long _counter = 0;
-
-  protected int _time;
-  protected long _time_stamp;
-
-  Event(int time) {
-    if ( time < 1 )
-      throw new IllegalArgumentException("Invalid time: "+time);
-    else {
-      _time = time;
-      _time_stamp = _counter++;
-    }
-  }
-
-  int getTime() {
-    return _time;
-  }
-
-  @Override
-  public int compareTo(Event o) {
-	  if(o._time!=_time) {
-		  return Integer.compare(_time, o._time);
-	  }
-	  else {
-		  return Long.compare(_time_stamp, o._time_stamp);
-	  }
-  }
-
-  abstract void execute(RoadMap map);
 }

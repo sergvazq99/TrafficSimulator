@@ -11,7 +11,7 @@ import simulator.model.Event;
 import simulator.model.SetWeatherEvent;
 import simulator.model.Weather;
 
-public class SetWeatherEventBuilder extends Builder<Event>{
+public class SetWeatherEventBuilder extends Builder<Event> {
 
 	public SetWeatherEventBuilder() {
 		super("set_weather", "Set Weather Event");
@@ -19,18 +19,18 @@ public class SetWeatherEventBuilder extends Builder<Event>{
 
 	@Override
 	protected Event create_instance(JSONObject data) {
-		int time=data.getInt("time");
-		JSONArray info=data.getJSONArray("info");
-		List<Pair<String,Weather>>pair=new ArrayList<>();
+		int time = data.getInt("time");
 		
-		for(int i=0;i<info.length();i++) {
-			
-			String road=info.getJSONObject(i).getString("road");
-			Weather weather=Weather.valueOf(info.getJSONObject(i).getString("weather").toUpperCase());
-			pair.add(new Pair<>(road,weather));
-			
+		List<Pair<String, Weather>> weather_change = new ArrayList<>();
+		JSONArray json_w_change = new JSONArray();
+		json_w_change = data.getJSONArray("info");
+		for (int i = 0; i < json_w_change.length(); i++) {
+			JSONObject json = json_w_change.getJSONObject(i);
+			Weather w = Weather.valueOf(json.getString("weather"));
+			weather_change.add(new Pair<String, Weather>(json.getString("road"), w));
 		}
-		return new SetWeatherEvent (time,pair);
+		
+		return new SetWeatherEvent(time, weather_change);
 	}
 
 }

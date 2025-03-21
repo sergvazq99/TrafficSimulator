@@ -1,11 +1,14 @@
 package simulator.view;
 
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 import javax.swing.table.AbstractTableModel;
 
 import simulator.control.Controller;
 import simulator.model.Event;
+import simulator.model.Junction;
 import simulator.model.RoadMap;
 import simulator.model.TrafficSimObserver;
 
@@ -17,14 +20,17 @@ public class JunctionsTableModel extends AbstractTableModel implements TrafficSi
 	private static final long serialVersionUID = 1L;
 	private Controller _ctrl;
 	private String[]junctionsTable= {"Id","Green","Queues"};
+	private List<Junction>junctionsList;
 	
 	JunctionsTableModel(Controller ctrl){
 		this._ctrl=ctrl;
+		this.junctionsList=new ArrayList<>();
+		this._ctrl.addObserver(this);
 	}
 
 	@Override
 	public int getRowCount() {
-		return 0;
+		return junctionsList.size();
 	}
 
 	@Override
@@ -34,7 +40,21 @@ public class JunctionsTableModel extends AbstractTableModel implements TrafficSi
 
 	@Override
 	public Object getValueAt(int rowIndex, int columnIndex) {
-		// TODO Auto-generated method stub
+		Junction j=this.junctionsList.get(rowIndex);
+		if(columnIndex==0) {
+			return j.getId();
+		}
+		else if(columnIndex==1) {
+			if(j.getGreenLightIndex()==-1) {
+				return "NONE";
+			}
+			else {
+				return j.getInRoads().get(j.getGreenLightIndex()).getId();
+			}
+		}
+		else if(columnIndex==2) {
+			return j.getInRoads()+":"+j.getQueues();
+		}
 		return null;
 	}
 	
@@ -45,25 +65,31 @@ public class JunctionsTableModel extends AbstractTableModel implements TrafficSi
 
 	@Override
 	public void onAdvance(RoadMap map, Collection<Event> events, int time) {
-		// TODO Auto-generated method stub
-		
+		this.junctionsList.clear();
+		for(Junction j:map.getJunctions()) {
+			this.junctionsList.add(j);
+		}
+		fireTableDataChanged();
 	}
 
 	@Override
 	public void onEventAdded(RoadMap map, Collection<Event> events, Event e, int time) {
-		// TODO Auto-generated method stub
+		fireTableDataChanged();
 		
 	}
 
 	@Override
 	public void onReset(RoadMap map, Collection<Event> events, int time) {
-		// TODO Auto-generated method stub
-		
+		this.junctionsList.clear();
+		fireTableDataChanged();
 	}
 
 	@Override
 	public void onRegister(RoadMap map, Collection<Event> events, int time) {
-		// TODO Auto-generated method stub
+		for(Junction j:map.getJunctions()) {
+			this.junctionsList.add(j);
+		}
+		fireTableDataChanged();
 		
 	}
 

@@ -1,68 +1,85 @@
 package simulator.model;
 
-import java.util.Iterator;
-
+import java.util.ArrayList;
+import java.util.List;
 import java.util.PriorityQueue;
 import java.util.Queue;
 
 import org.json.JSONObject;
 
-public class TrafficSimulator {
+public class TrafficSimulator implements Observable<TrafficSimObserver>{
 	
-	private RoadMap roadMap;
-	private Queue<Event> eventsPriority;
+	private RoadMap map;
+	private Queue<Event> event_queue;
 	private int time;
+	private List<TrafficSimObserver> observer;
 	
 	public TrafficSimulator() {
-		this.roadMap=new RoadMap();
-		this.eventsPriority=new PriorityQueue<Event>();
-		this.time=0;
+		map = new RoadMap();
+		event_queue = new PriorityQueue<>();
+		time = 0;
+		observer=new ArrayList<>();
 	}
-	
-	
+
 	public void addEvent(Event e) {
-		this.eventsPriority.add(e);
+		event_queue.add(e);
+		for(TrafficSimObserver o: observer) {
+			o.onEventAdded(map, event_queue, e, time);
+		}
+		
 	}
 	
 	public void advance() {
-		//i
-		time++;
+		this.time++;
 		
-		//ii
-		Iterator<Event>iterator=this.eventsPriority.iterator();
-		while(iterator.hasNext()) {
-			Event e=iterator.next();
-			if(e.getTime()==time) {
-				e.execute(roadMap);
-				iterator.remove();
-			}
+		for(int i = event_queue.size()-1; i >= 0 ; i--) {
+			Event e = event_queue.poll();
+			if (time == e.time) {
+				e.execute(map);
+			}else
+				event_queue.add(e);
 		}
 		
-		//iii
-		for(Junction junction:this.roadMap.getJunctions()) {
-			junction.advance(time);
+		for (Junction j: map.getJunctions()) {
+			j.advance(time);
 		}
 		
-		//iv
-		for(Road road:this.roadMap.getRoads()) {
-			road.advance(time);
+		for (Road r: map.getRoads()) {
+			r.advance(time);
 		}
+		
+		for(TrafficSimObserver o: observer) {
+			o.onAdvance(map, event_queue, time);
+		}
+		
 	}
 	
 	public void reset() {
-		this.roadMap.reset();
-		this.eventsPriority.clear();
-		time=0;
+		map.reset();
+		event_queue.clear();
+		time = 0;
+		for(TrafficSimObserver o: observer) {
+			o.onReset(map, event_queue, time);
+		}
+		
 	}
-	
+
 	public JSONObject report() {
-		
-		JSONObject json=new JSONObject();
-		
+		JSONObject json = new JSONObject();
 		json.put("time", time);
-		json.put("state", this.roadMap.report());
-		
+		json.put("state", map.report());
 		return json;
 	}
 
+	@Override
+	public void addObserver(TrafficSimObserver o) {
+		this.observer.add(o);
+	}
+
+	@Override
+	public void removeObserver(TrafficSimObserver o) {
+		this.observer.remove(o);
+	}
+	
+	// 
 }

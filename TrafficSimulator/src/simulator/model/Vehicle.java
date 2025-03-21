@@ -1,168 +1,168 @@
 package simulator.model;
 
 import java.util.ArrayList;
-
 import java.util.Collections;
 import java.util.List;
-
 import org.json.JSONObject;
 
-public class Vehicle extends SimulatedObject{
+public class Vehicle extends SimulatedObject {
 	
-	private List<Junction> _itinerary;
-	private int _maxSpeed;
-	private int speed;
-	private VehicleStatus state;
+	/*
+	 *
+	 * Atributos
+	 *
+	 */
+	
+	// private
+	private List<Junction> itinerary;
+	private int cont_iter;
 	private Road road;
 	private int location;
-	private int co2;
-	private int _contClass;
-	private int distance;
-	private int cont;
-
-	Vehicle(String id, int maxSpeed, int contClass, List<Junction> itinerary) {
-		  super(id);
-		  if(maxSpeed<=0||contClass<0||contClass>10||itinerary.size()<2) {
-			  throw new IllegalArgumentException("Error arguments of Vehicle");
-		  }
-		  this.speed=0;
-		  
-		  this.state=VehicleStatus.PENDING;
-		  
-		  this._maxSpeed=maxSpeed;
-		  this._contClass=contClass;
-		  this._itinerary=Collections.unmodifiableList(new ArrayList<>(itinerary));;
-		  this.location=0;
-		  this.distance=0;
-		  this.co2=0;
-		  this.cont=0;
-	}
+	private int total_distance;
 	
-	void setSpeed(int s) {
-		if(s<0) {
-			throw new IllegalArgumentException("s must be positive");
-		}
-		this.speed=Math.min(s, _maxSpeed);
-	}
+	private int max_speed;
+	private int act_speed;
+	private VehicleStatus state;
 	
-	void setContClass(int c) {
-		if(c<0||c>10) {
-			throw new IllegalArgumentException("c must be between 0 and 10");
-		}
-		this.co2=c;
-	}
-
-	@Override
-	void advance(int time) {
-		if(this.state==VehicleStatus.TRAVELING) {
-			int original_location=this.location;
-			this.location=this.location+this.speed;
-			
-			if(this.location>this.road.getLength()) {
-				this.location=this.road.getLength();
-			}
-			
-			int d=this.location-original_location;
-			this.distance+=d;
-			
-			int c=d*this._contClass;
-			this.co2+=c;
-			road.addContamination(c);
-			
-			
-			if(this.location>=this.road.getLength()) {
-				this.road.getDest().enter(this);
-				this.state=VehicleStatus.WAITING;
-				this.speed=0;
-				this.cont++;
-			}
-		}
+	private int grade_pollution;
+	private int total_pollution;
+	
+	
+	Vehicle(String id, int maxSpeed, int contClass, List<Junction> itinerary) throws IllegalArgumentException {
+		super(id);
 		
+		if (maxSpeed <= 0)
+			throw new IllegalArgumentException("maxSpeed can´t be lower than 0");
+		else 
+			this.max_speed = maxSpeed;
+		if (contClass < 0 || contClass > 10)
+			throw new IllegalArgumentException("Contamination Pollution must be between 0 and 10 (both included)");
+		else 
+			this.grade_pollution = contClass;
+		if (itinerary.size() < 2)
+			throw new IllegalArgumentException("There must be at least 2 Junctions");
+		else 
+			this.itinerary = Collections.unmodifiableList(new ArrayList<>(itinerary));
+		
+		this.cont_iter = 0;
+		this.location = 0;
+		this.act_speed = 0;
+		this.total_distance = 0;
+		this.total_pollution = 0;
+		this.state = VehicleStatus.PENDING;
 	}
 	
-	void moveToNextRoad() { 
-		if (this.state != VehicleStatus.PENDING && this.state != VehicleStatus.WAITING) {
-	        throw new IllegalStateException("The vehicle must be in PENDING or WAITING state.");
-	    }
-
-	    // Si el vehículo no está en una carretera, lo asignamos a la primera carretera de su itinerario.
-	    if (this.road == null) {
-	        // Si el vehículo no está en una carretera, asignamos la primera carretera del itinerario
-	        Junction currentJunction = this._itinerary.get(cont);
-	        Road nextRoad = currentJunction.roadTo(this._itinerary.get(cont + 1));
-	        this.road = nextRoad; // Asignamos la carretera
-
-	        // Cambiar estado a TRAVELING y poner la ubicación en 0
-	        this.state = VehicleStatus.TRAVELING;
-	        this.location = 0;
-	    } else {
-	        // Si ya está en una carretera, llama a exit en la carretera actual y mueve al siguiente cruce
-	        this.road.exit(this);
-	        cont++; // Avanzamos al siguiente cruce en el itinerario
-
-	        // Ahora que ha salido de la carretera actual, entra en la siguiente carretera
-	        Junction nextJunction = this._itinerary.get(cont);
-	        Road nextRoad = nextJunction.roadTo(this.road.getDest());
-	        this.road = nextRoad; // Asignamos la siguiente carretera
-
-	        // Cambiar estado a TRAVELING
-	        this.state = VehicleStatus.TRAVELING;
-	        this.location = 0; // Colocamos al vehículo al principio de la carretera
-	    }
+	void setSpeed(int s) throws IllegalArgumentException {
+		if (s < 0)
+			throw new IllegalArgumentException("the speed to be set needs to be positive");
+		else
+			if (state == VehicleStatus.TRAVELING)
+				act_speed = (s > max_speed)? max_speed : s;
 	}
-
-	@Override
-	public JSONObject report() {
-		JSONObject json = new JSONObject();
-	    
-	    json.put("id", _id);
-	    json.put("speed", speed);
-	    json.put("distance", distance);
-	    json.put("co2", co2);
-	    json.put("class", _contClass);
-	    json.put("status", state.toString());
-	    if(state == VehicleStatus.TRAVELING || state == VehicleStatus.WAITING) {
-		    json.put("road", road.getId());
-		    json.put("location", location);
-	    }
-	    
-	    return json;
+	
+	void setContClass(int c) throws IllegalArgumentException {
+		if (c < 0 || c > 10)
+			throw new IllegalArgumentException("the contamination grade to set needs to be between 0 and 10 (both included)");
+		else 
+			grade_pollution = c;
 	}
-
-	public List<Junction> getItinerary() {
-		return _itinerary;
-	}
-
-	public int getMaxSpeed() {
-		return _maxSpeed;
-	}
-
-	public int getSpeed() {
-		return speed;
-	}
-
-	public VehicleStatus getStatus() {
-		return state;
-	}
-
-	public Road getRoad() {
-		return road;
-	}
-
+	
 	public int getLocation() {
 		return location;
 	}
-
+	public int getSpeed() {
+		return act_speed;
+	}
+	public int getMaxSpeed() {
+		return max_speed;
+	}
+	public int getContClass() {
+		return grade_pollution;
+	}
+	public VehicleStatus getStatus() {
+		return state;
+	}
 	public int getTotalCO2() {
-		return co2;
+		return total_pollution;
+	}
+	public List<Junction> getItinerary(){
+		return itinerary;
+	}
+	public Road getRoad() {
+		return road;
+	}
+	public int getTotal_distance() {
+		return total_distance;
 	}
 
-	public int getContClass() {
-		return _contClass;
+	// Movimiento y comportamiento de Vehicle	
+	@Override
+	void advance(int time) {
+		if (state == VehicleStatus.TRAVELING) {
+			int traveled = act_speed;
+			if (location + act_speed <= road.getLength()) { // comprobar que no se salga de la longitud de la carretera
+				location += act_speed;
+				total_distance += act_speed;
+			}else {
+				traveled = road.getLength() - location;
+				location = road.getLength();
+				total_distance += traveled;
+			}
+			
+			// Calculo de la pollution
+			int c = traveled * grade_pollution;
+			total_pollution += c;
+			road.addContamination(c);
+			
+			// Si se acaba la carretera se une al siguiente cruce
+			if (location >= road.getLength()) {
+				road.getDest().enter(this);
+				act_speed = 0;
+				state = VehicleStatus.WAITING;
+			}
+		}
 	}
 	
-	public int getCont() {
-		return cont;
+	void moveToNextRoad() {
+		if(cont_iter < itinerary.size()) {
+			if (road != null)
+				road.exit(this); // Salimos de la carretera
+			if (state == VehicleStatus.PENDING) {
+				road = itinerary.get(0).roadTo(itinerary.get(1)); // Buscar la siguiente carretera
+				road.enter(this); // Entramos en la carretera
+				cont_iter = 2;
+			}else if(state == VehicleStatus.WAITING) {
+				// se necesita un contador para evitar busquedas innecesarias
+				road = road.getDest().roadTo(itinerary.get(cont_iter));
+				location = 0;
+				road.enter(this);
+				cont_iter++;
+			}else{
+                throw new IllegalArgumentException("Vehicle state is neither PENDING nor WAITING");
+            }
+			state = VehicleStatus.TRAVELING;
+		}else {
+			state = VehicleStatus.ARRIVED;
+			road.exit(this);
+		}
 	}
+
+	// Metodos JSON
+	@Override
+	public JSONObject report() {
+		JSONObject json = new JSONObject();
+		json.put("id", getId());
+		json.put("speed", act_speed);
+		json.put("distance", total_distance);
+		json.put("co2", total_pollution);
+		json.put("class", grade_pollution);
+		json.put("status", state.toString());
+		if (state == VehicleStatus.TRAVELING || state == VehicleStatus.WAITING) {
+			json.put("road", road.getId());
+			json.put("location", location);
+		}
+		return json;
+	}
+
 
 }
