@@ -1,6 +1,7 @@
 package simulator.view;
 
-import java.awt.BorderLayout;
+
+
 
 
 
@@ -15,15 +16,12 @@ import java.util.Collection;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFileChooser;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 import javax.swing.JToolBar;
-import javax.swing.SpinnerModel;
 import javax.swing.SwingUtilities;
 
 import simulator.control.Controller;
@@ -46,6 +44,9 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 	private JButton execButton;
 	private JButton stopButton;
 	private JButton exitButton;
+	
+	private ChangeCO2ClassDialog co2Dialog;
+	private ChangeWeatherDialog weatherDialog;
 	
 	ControlPanel(Controller ctrl){
 		this._ctrl=ctrl;
@@ -101,7 +102,27 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 		
 		//co2 button
 		
+		co2Button.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				co2Dialog=new ChangeCO2ClassDialog(_ctrl);
+				
+			}
+			
+		});
+		
 		//weather button
+		
+		weatherButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				weatherDialog=new ChangeWeatherDialog(_ctrl);
+				
+			}
+			
+		});
 		
 		//run button
 		
