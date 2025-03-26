@@ -74,6 +74,7 @@ public class TrafficSimulator implements Observable<TrafficSimObserver>{
 	@Override
 	public void addObserver(TrafficSimObserver o) {
 		this.observer.add(o);
+		o.onRegister(map, event_queue, time);
 	}
 
 	@Override
