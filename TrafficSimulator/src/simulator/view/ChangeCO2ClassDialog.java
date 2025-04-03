@@ -2,11 +2,15 @@ package simulator.view;
 
 import java.awt.BorderLayout;
 
+
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
@@ -14,12 +18,15 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 
 import simulator.control.Controller;
+import simulator.misc.Pair;
 import simulator.model.Event;
 import simulator.model.RoadMap;
+import simulator.model.SetContClassEvent;
 import simulator.model.TrafficSimObserver;
 import simulator.model.Vehicle;
 
@@ -32,11 +39,19 @@ public class ChangeCO2ClassDialog extends JDialog implements TrafficSimObserver{
 	private Controller _ctrl;
 	private DefaultComboBoxModel<String>_vehiclesCombo;
 	private DefaultComboBoxModel<Integer>_co2Combo;
+	private JComboBox<String>vehiclesCombo;
+	private JComboBox<Integer>co2Combo;
+	private JSpinner ticksSpinner;
+	private Map<String,Integer>vehicleCO2Map;
 	
 	ChangeCO2ClassDialog(Controller ctrl){
 		this._ctrl=ctrl;
 		this._vehiclesCombo=new DefaultComboBoxModel<>();
 		this._co2Combo=new DefaultComboBoxModel<>();
+		this.vehiclesCombo=new JComboBox<>(_vehiclesCombo);
+        this.co2Combo=new JComboBox<>(_co2Combo);
+        this.ticksSpinner=new JSpinner();
+        this.vehicleCO2Map=new HashMap<>();
 		this._ctrl.addObserver(this);
 		initGUI();
 	}
@@ -59,15 +74,24 @@ public class ChangeCO2ClassDialog extends JDialog implements TrafficSimObserver{
         JLabel vehicleLabel=new JLabel("Vehicle: ");
         JLabel classLabel=new JLabel("CO2 Class: ");
         JLabel ticksLabel=new JLabel("Ticks: ");
-        JComboBox<String>vehiclesCombo=new JComboBox<>(_vehiclesCombo);
-        JComboBox<Integer>co2Combo=new JComboBox<>(_co2Combo);
-        JSpinner ticksSpinner = new JSpinner();
 
         vehiclesCombo.setPreferredSize(new Dimension(100, 30));
         co2Combo.setPreferredSize(new Dimension(100, 30));
         ticksSpinner.setPreferredSize(new Dimension(100, 30));
         
-        
+        this.vehiclesCombo.addActionListener(new ActionListener() {
+        	
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String selectVehicle=(String)vehiclesCombo.getSelectedItem();
+				if(selectVehicle!=null&&vehicleCO2Map.containsKey(selectVehicle)) {
+					int co2=vehicleCO2Map.get(selectVehicle);
+					co2Combo.setSelectedItem(co2);
+				}
+				
+			}
+        	
+        });
         
         ticksSpinner.setValue(1);
         
@@ -83,6 +107,15 @@ public class ChangeCO2ClassDialog extends JDialog implements TrafficSimObserver{
         JPanel buttonsPanel = new JPanel();
         JButton ok = new JButton("OK");
         JButton cancel = new JButton("Cancel");
+        
+        ok.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				okAction();
+			}
+        	
+        });
         
         cancel.addActionListener(new ActionListener() {
 
@@ -101,26 +134,50 @@ public class ChangeCO2ClassDialog extends JDialog implements TrafficSimObserver{
         setLocationRelativeTo(null); 
         setVisible(true);
 	}
+	
+	private void okAction() {
+		String id=(String)vehiclesCombo.getSelectedItem();
+		Integer classCO2=(Integer)co2Combo.getSelectedItem();
+		int ticks=(int)ticksSpinner.getValue();
+		
+		if(id==null&&classCO2==null) {
+			JOptionPane.showMessageDialog(this, "Seleccione un vehículo y una clase de CO2.", "Error", JOptionPane.ERROR_MESSAGE);
+		}
+		else {
+			List<Pair<String, Integer>> changes = List.of(new Pair<>(id, classCO2));
+			this._ctrl.addEvent(new SetContClassEvent(ticks, changes));
+			dispose();
+		}
+    }
 
 	@Override
 	public void onAdvance(RoadMap map, Collection<Event> events, int time) {
-		
+		/*for(Vehicle v:map.getVehicles()) {
+			this.vehicleCO2Map.put(v.getId(), v.getContClass());
+			
+		}*/
 	}
 
 	@Override
 	public void onEventAdded(RoadMap map, Collection<Event> events, Event e, int time) {
 		for(Vehicle v:map.getVehicles()) {
 			this._vehiclesCombo.addElement(v.getId());
-			this._co2Combo.addElement(v.getContClass());
+			
+			this.vehicleCO2Map.put(v.getId(), v.getContClass());
+		}
+		for(int i=0;i<11;i++) {
+			this._co2Combo.addElement(i);
 		}
 	}
 
 	@Override
 	public void onReset(RoadMap map, Collection<Event> events, int time) {
-		//this._vehiclesCombo.setSelectedItem(map.getVehicles());
 		for(Vehicle v:map.getVehicles()) {
 			this._vehiclesCombo.addElement(v.getId());
-			this._co2Combo.addElement(v.getContClass());
+			this.vehicleCO2Map.put(v.getId(), v.getContClass());
+		}
+		for(int i=0;i<11;i++) {
+			this._co2Combo.addElement(i);
 		}
 	}
 
@@ -128,9 +185,11 @@ public class ChangeCO2ClassDialog extends JDialog implements TrafficSimObserver{
 	public void onRegister(RoadMap map, Collection<Event> events, int time) {
 		for(Vehicle v:map.getVehicles()) {
 			this._vehiclesCombo.addElement(v.getId());
-			this._co2Combo.addElement(v.getContClass());
+			this.vehicleCO2Map.put(v.getId(), v.getContClass());
 		}
-		
+		for(int i=0;i<11;i++) {
+			this._co2Combo.addElement(i);
+		}
 	}
 
 }
