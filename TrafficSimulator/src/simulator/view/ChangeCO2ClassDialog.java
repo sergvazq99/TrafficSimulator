@@ -79,6 +79,7 @@ public class ChangeCO2ClassDialog extends JDialog implements TrafficSimObserver{
         co2Combo.setPreferredSize(new Dimension(100, 30));
         ticksSpinner.setPreferredSize(new Dimension(100, 30));
         
+        
         this.vehiclesCombo.addActionListener(new ActionListener() {
         	
 			@Override
@@ -135,6 +136,7 @@ public class ChangeCO2ClassDialog extends JDialog implements TrafficSimObserver{
         setVisible(true);
 	}
 	
+	//método cuando le das al OK, registrar [idVehículo, Contaminación y Ticks] y se lo pasas al evento para que se añada en la tabla
 	private void okAction() {
 		String id=(String)vehiclesCombo.getSelectedItem();
 		Integer classCO2=(Integer)co2Combo.getSelectedItem();
@@ -152,10 +154,7 @@ public class ChangeCO2ClassDialog extends JDialog implements TrafficSimObserver{
 
 	@Override
 	public void onAdvance(RoadMap map, Collection<Event> events, int time) {
-		/*for(Vehicle v:map.getVehicles()) {
-			this.vehicleCO2Map.put(v.getId(), v.getContClass());
-			
-		}*/
+		
 	}
 
 	@Override

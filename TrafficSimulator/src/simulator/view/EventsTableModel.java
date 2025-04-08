@@ -1,6 +1,7 @@
 package simulator.view;
 
 import java.util.ArrayList;
+
 import java.util.Collection;
 import java.util.List;
 
@@ -10,7 +11,6 @@ import simulator.control.Controller;
 import simulator.model.Event;
 import simulator.model.RoadMap;
 import simulator.model.TrafficSimObserver;
-import simulator.model.TrafficSimulator;
 
 public class EventsTableModel extends AbstractTableModel implements TrafficSimObserver{
 

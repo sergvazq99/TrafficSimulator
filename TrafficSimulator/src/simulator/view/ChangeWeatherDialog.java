@@ -6,6 +6,9 @@ import java.awt.FlowLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.swing.BoxLayout;
 import javax.swing.DefaultComboBoxModel;
@@ -13,14 +16,18 @@ import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JSpinner;
 
 import simulator.control.Controller;
+import simulator.misc.Pair;
 import simulator.model.Event;
 import simulator.model.Road;
 import simulator.model.RoadMap;
+import simulator.model.SetWeatherEvent;
 import simulator.model.TrafficSimObserver;
+import simulator.model.Weather;
 
 
 public class ChangeWeatherDialog extends JDialog implements TrafficSimObserver{
@@ -33,12 +40,20 @@ public class ChangeWeatherDialog extends JDialog implements TrafficSimObserver{
 	private static final long serialVersionUID = 1L;
 	private Controller _ctrl;
 	private DefaultComboBoxModel<String> _roadCombo;
-	private DefaultComboBoxModel<String> _weatherCombo;
+	private DefaultComboBoxModel<Weather> _weatherCombo;
+	private JComboBox<String>roadCombo;
+	private JComboBox<Weather>weatherCombo;
+	private JSpinner ticksSpinner;
+	private Map<String,Weather>roadWeatherMap;
 
 	ChangeWeatherDialog(Controller ctrl){
 		this._ctrl=ctrl;
 		this._roadCombo=new DefaultComboBoxModel<>();
 		this._weatherCombo=new DefaultComboBoxModel<>();
+		this.roadCombo=new JComboBox<>(_roadCombo);
+		this.weatherCombo=new JComboBox<>(_weatherCombo);
+		this.ticksSpinner=new JSpinner();
+		this.roadWeatherMap=new HashMap<>();
 		this._ctrl.addObserver(this);
 		initGUI();
 	}
@@ -61,14 +76,23 @@ public class ChangeWeatherDialog extends JDialog implements TrafficSimObserver{
 		JLabel weatherLabel=new JLabel("Weather: ");
 		JLabel ticksLabel=new JLabel("Ticks: ");
 		
-		JComboBox<String>roadCombo=new JComboBox<>(_roadCombo);
-		JComboBox<String>weatherCombo=new JComboBox<>(_weatherCombo);
-		JSpinner ticksSpinner=new JSpinner();
-		
 		roadCombo.setPreferredSize(new Dimension(100,30));
 		weatherCombo.setPreferredSize(new Dimension(100,30));
 		ticksSpinner.setPreferredSize(new Dimension(100,30));
 		
+		this.roadCombo.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				String selectedRoad=(String)roadCombo.getSelectedItem();
+				if(selectedRoad!=null&&roadWeatherMap.containsKey(selectedRoad)) {
+					Weather weather=roadWeatherMap.get(selectedRoad);
+					roadCombo.setSelectedItem(weather);
+				}
+				
+			}
+			
+		});
 		
 		ticksSpinner.setValue(1);
 		
@@ -95,6 +119,15 @@ public class ChangeWeatherDialog extends JDialog implements TrafficSimObserver{
         	
         });
 		
+		ok.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				okAction();
+			}
+        	
+        });
+		
 		buttonsPanel.add(cancel);
 		buttonsPanel.add(ok);
 		this.add(buttonsPanel,BorderLayout.SOUTH);
@@ -102,6 +135,21 @@ public class ChangeWeatherDialog extends JDialog implements TrafficSimObserver{
 		pack();
 		setLocationRelativeTo(null); 
 		this.setVisible(true);
+	}
+	
+	private void okAction() {
+		String id=(String)this.roadCombo.getSelectedItem();
+		Weather weather=(Weather) this.weatherCombo.getSelectedItem();
+		int ticks=(int)this.ticksSpinner.getValue();
+		
+		if(id==null&&weather==null) {
+			JOptionPane.showMessageDialog(this, "Seleccione una carretera y un tiempo", "Error", JOptionPane.ERROR_MESSAGE);
+		}
+		else {
+			List<Pair<String,Weather>> changes=List.of(new Pair<>(id,weather));
+			this._ctrl.addEvent(new SetWeatherEvent(ticks, changes));
+			dispose();
+		}
 	}
 
 	@Override
@@ -114,27 +162,30 @@ public class ChangeWeatherDialog extends JDialog implements TrafficSimObserver{
 	public void onEventAdded(RoadMap map, Collection<Event> events, Event e, int time) {
 		for(Road r:map.getRoads()) {
 			this._roadCombo.addElement(r.getId());
-			this._weatherCombo.addElement(r.getWeather().toString());
 		}
-		
+		for(Weather w:Weather.values()) {
+			this._weatherCombo.addElement(w);
+		}
 	}
 
 	@Override
 	public void onReset(RoadMap map, Collection<Event> events, int time) {
 		for(Road r:map.getRoads()) {
 			this._roadCombo.addElement(r.getId());
-			this._weatherCombo.addElement(r.getWeather().toString());
 		}
-		
+		for(Weather w:Weather.values()) {
+			this._weatherCombo.addElement(w);
+		}
 	}
 
 	@Override
 	public void onRegister(RoadMap map, Collection<Event> events, int time) {
 		for(Road r:map.getRoads()) {
 			this._roadCombo.addElement(r.getId());
-			this._weatherCombo.addElement(r.getWeather().toString());
 		}
-		
+		for(Weather w:Weather.values()) {
+			this._weatherCombo.addElement(w);
+		}
 	}
 
 }
