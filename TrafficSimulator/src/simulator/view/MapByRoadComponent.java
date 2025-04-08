@@ -61,9 +61,13 @@ public class MapByRoadComponent extends JComponent implements TrafficSimObserver
 		g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 		
 		g.setColor(Color.BLACK);
-		
-		drawRoads(graphics);
-		drawVehicles(graphics);
+		if (_map == null || _map.getJunctions().size() == 0) {
+			g.setColor(Color.red);
+			g.drawString("No map yet!", getWidth() / 2 - 50, getHeight() / 2);
+		} else {
+			drawRoads(graphics);
+			drawVehicles(graphics);
+		}
 	}
 	
 	private void drawRoads(Graphics graphics) {
