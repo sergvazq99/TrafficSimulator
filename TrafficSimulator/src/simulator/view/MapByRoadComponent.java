@@ -3,6 +3,7 @@ package simulator.view;
 import java.awt.Color;
 
 
+
 import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -20,6 +21,7 @@ import simulator.control.Controller;
 import simulator.model.Event;
 import simulator.model.RoadMap;
 import simulator.model.TrafficSimObserver;
+import simulator.model.VehicleStatus;
 import simulator.model.Weather;
 
 public class MapByRoadComponent extends JComponent implements TrafficSimObserver {
@@ -65,12 +67,12 @@ public class MapByRoadComponent extends JComponent implements TrafficSimObserver
 			g.setColor(Color.red);
 			g.drawString("No map yet!", getWidth() / 2 - 50, getHeight() / 2);
 		} else {
-			drawRoads(graphics);
-			drawVehicles(graphics);
+			drawComponents(graphics);
+			//drawVehicles(graphics);
 		}
 	}
 	
-	private void drawRoads(Graphics graphics) {
+	private void drawComponents(Graphics graphics) {
 		for(int i=0;i<_map.getRoads().size();i++) {
 			int x1=50;
 			int x2=getWidth()-100;
@@ -81,25 +83,31 @@ public class MapByRoadComponent extends JComponent implements TrafficSimObserver
 			graphics.fillOval(x1-10, y-5, 10, 10);
 			graphics.setColor(Color.BLACK);
 			graphics.drawLine(x1, y, x2, y);
-			graphics.setColor(setColor(_map.getRoads().get(i).getDest().getGreenLightIndex()));
+			Color arrowColor = Color.RED;
+			int idx = _map.getRoads().get(i).getDest().getGreenLightIndex();
+			if (idx != -1 && _map.getRoads().get(i).equals(_map.getRoads().get(i).getDest().getInRoads().get(idx))) {
+				arrowColor = Color.GREEN;
+			}
+			graphics.setColor(arrowColor);
 			graphics.fillOval(x1+330, y-5, 10, 10);
+			
+			for(int j=0;j<_map.getRoads().get(i).getVehicles().size();j++) {
+				int vx = x1 + (int) ((x2-x1) * ((double) _map.getRoads().get(i).getVehicles().get(j).getLocation() / (double) _map.getRoads().get(i).getLength()));
+				int vy = y;
+				if( _map.getRoads().get(i).getVehicles().get(j).getStatus() == VehicleStatus.TRAVELING) {
+					graphics.setColor(Color.GREEN);
+					graphics.drawString(_map.getRoads().get(i).getVehicles().get(j).getId(), vx , vy-5);
+					graphics.drawImage(_car, vx , vy-12, 16, 16,this);
+				}
+				
+			}
+			
 			graphics.setColor(new Color(183, 96, 8));
 			graphics.drawString(_map.getRoads().get(i).getDest().getId(), x2, y-7);
 			graphics.drawImage(selectWeather(_map.getRoads().get(i).getWeather()), x2, y-15, 32, 32, this);
 			graphics.drawImage(selectContClass(_map.getRoads().get(i).getTotalCO2(),_map.getRoads().get(i).getContLimit()), x2+35, y-15, 32, 32, this);
 		}
 		
-	}
-	
-	private void drawVehicles(Graphics graphics) {
-		for(int i=0;i<_map.getVehicles().size();i++) {
-			int x1=50;
-			int x2=getWidth()-100;
-			int y=(i+1)*50;
-			graphics.setColor(Color.GREEN);
-			graphics.drawString(_map.getVehicles().get(i).getId(), x1 + (int) ((x2 - x1) * ((double) _map.getVehicles().get(i).getLocation() / (double) _map.getRoads().get(i).getLength())), y-5);
-			graphics.drawImage(_car, x1 + (int) ((x2 - x1) * ((double) _map.getVehicles().get(i).getLocation() / (double) _map.getRoads().get(i).getLength())), y, 16, 16,this);
-		}
 	}
 	
 	private Image selectWeather(Weather weather) {
@@ -128,15 +136,6 @@ public class MapByRoadComponent extends JComponent implements TrafficSimObserver
 	
 	public int calculateContClass(int totalCO2,int contLimit) {
 		return (int) Math.floor(Math.min((double) totalCO2/(1.0 + (double) contLimit),1.0) / 0.19);
-	}
-	
-	private Color setColor(int colorGreen) {
-		if(colorGreen==-1) {
-			return Color.RED;
-		}
-		else {
-			return Color.GREEN;
-		}
 	}
 	
 	public void update(RoadMap map) {

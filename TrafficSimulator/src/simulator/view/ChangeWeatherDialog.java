@@ -1,8 +1,10 @@
 package simulator.view;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
@@ -45,8 +47,11 @@ public class ChangeWeatherDialog extends JDialog implements TrafficSimObserver{
 	private JComboBox<Weather>weatherCombo;
 	private JSpinner ticksSpinner;
 	private Map<String,Weather>roadWeatherMap;
+	
+	private int time = 0;
 
-	ChangeWeatherDialog(Controller ctrl){
+	ChangeWeatherDialog(Controller ctrl, Frame f){
+		super(f, true);
 		this._ctrl=ctrl;
 		this._roadCombo=new DefaultComboBoxModel<>();
 		this._weatherCombo=new DefaultComboBoxModel<>();
@@ -134,7 +139,12 @@ public class ChangeWeatherDialog extends JDialog implements TrafficSimObserver{
 		
 		pack();
 		setLocationRelativeTo(null); 
-		this.setVisible(true);
+		this.setVisible(false);
+	}
+	
+	public void open(Component f) {
+		this.setLocationRelativeTo(f);
+		setVisible(true);
 	}
 	
 	private void okAction() {
@@ -142,12 +152,12 @@ public class ChangeWeatherDialog extends JDialog implements TrafficSimObserver{
 		Weather weather=(Weather) this.weatherCombo.getSelectedItem();
 		int ticks=(int)this.ticksSpinner.getValue();
 		
-		if(id==null&&weather==null) {
+		if(id==null||weather==null) {
 			JOptionPane.showMessageDialog(this, "Seleccione una carretera y un tiempo", "Error", JOptionPane.ERROR_MESSAGE);
 		}
 		else {
 			List<Pair<String,Weather>> changes=List.of(new Pair<>(id,weather));
-			this._ctrl.addEvent(new SetWeatherEvent(ticks, changes));
+			this._ctrl.addEvent(new SetWeatherEvent(time + ticks, changes));
 			dispose();
 		}
 	}
@@ -186,6 +196,7 @@ public class ChangeWeatherDialog extends JDialog implements TrafficSimObserver{
 		for(Weather w:Weather.values()) {
 			this._weatherCombo.addElement(w);
 		}
+		this.time = time;
 	}
 
 }

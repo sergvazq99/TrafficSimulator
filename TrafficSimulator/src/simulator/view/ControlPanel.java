@@ -14,6 +14,7 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.util.Collection;
 
+import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -64,13 +65,13 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 	}
 	
 	private void initGUI() {
-		this.setPreferredSize(new Dimension(500,100));
+		//this.setPreferredSize(new Dimension(500,100));
 		this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 		
 		JLabel labelSpinner=new JLabel("Ticks: ");
 		JSpinner spinner=new JSpinner();
 		spinner.setValue(10);
-		spinner.setMaximumSize(new Dimension(100,40));
+		spinner.setMaximumSize(new Dimension(2000, 50));
 		labelSpinner.add(spinner);
 		
 		fileButton.setIcon(new ImageIcon("resources/icons/open.png"));
@@ -102,27 +103,17 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 		});
 		
 		//co2 button
+		co2Dialog=new ChangeCO2ClassDialog(_ctrl, ViewUtils.getWindow(this));
 		
-		co2Button.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				co2Dialog=new ChangeCO2ClassDialog(_ctrl);
-				
-			}
-			
+		co2Button.addActionListener(e -> {
+				co2Dialog.open(ViewUtils.getWindow(this));
 		});
 		
 		//weather button
+		weatherDialog = new ChangeWeatherDialog(_ctrl, ViewUtils.getWindow(this));
 		
-		weatherButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				weatherDialog=new ChangeWeatherDialog(_ctrl);
-				
-			}
-			
+		weatherButton.addActionListener(e -> {
+			weatherDialog.open(ViewUtils.getWindow(this));
 		});
 		
 		//run button
@@ -179,6 +170,7 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 		bar.add(labelSpinner);
 		bar.add(spinner);
 		bar.addSeparator();
+		bar.add(Box.createHorizontalGlue());
 		bar.add(exitButton);
 		this.add(bar);
 		
@@ -201,7 +193,7 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 				this.weatherButton.setEnabled(true);
 			}
 		} else {
-			_stopped = true;
+			_stopped = false;
 			this.co2Button.setEnabled(true);
 			this.execButton.setEnabled(true);
 			this.exitButton.setEnabled(true);

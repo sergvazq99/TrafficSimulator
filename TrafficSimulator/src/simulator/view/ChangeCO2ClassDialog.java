@@ -1,10 +1,10 @@
 package simulator.view;
 
 import java.awt.BorderLayout;
-
-
+import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
+import java.awt.Frame;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.util.Collection;
@@ -34,7 +34,7 @@ public class ChangeCO2ClassDialog extends JDialog implements TrafficSimObserver{
 
 	/**
 	 * 
-	 */
+	 */	
 	private static final long serialVersionUID = 1L;
 	private Controller _ctrl;
 	private DefaultComboBoxModel<String>_vehiclesCombo;
@@ -44,7 +44,10 @@ public class ChangeCO2ClassDialog extends JDialog implements TrafficSimObserver{
 	private JSpinner ticksSpinner;
 	private Map<String,Integer>vehicleCO2Map;
 	
-	ChangeCO2ClassDialog(Controller ctrl){
+	private int time = 0;
+	
+	ChangeCO2ClassDialog(Controller ctrl, Frame f){
+		super(f, true);
 		this._ctrl=ctrl;
 		this._vehiclesCombo=new DefaultComboBoxModel<>();
 		this._co2Combo=new DefaultComboBoxModel<>();
@@ -133,21 +136,25 @@ public class ChangeCO2ClassDialog extends JDialog implements TrafficSimObserver{
 
         pack(); 
         setLocationRelativeTo(null); 
-        setVisible(true);
+        setVisible(false);
 	}
 	
-	//método cuando le das al OK, registrar [idVehículo, Contaminación y Ticks] y se lo pasas al evento para que se añada en la tabla
+	public void open(Component f) {
+		this.setLocationRelativeTo(f);
+		setVisible(true);
+	}
+	
 	private void okAction() {
 		String id=(String)vehiclesCombo.getSelectedItem();
 		Integer classCO2=(Integer)co2Combo.getSelectedItem();
 		int ticks=(int)ticksSpinner.getValue();
 		
-		if(id==null&&classCO2==null) {
+		if(id==null||classCO2==null) {
 			JOptionPane.showMessageDialog(this, "Seleccione un vehículo y una clase de CO2.", "Error", JOptionPane.ERROR_MESSAGE);
 		}
 		else {
 			List<Pair<String, Integer>> changes = List.of(new Pair<>(id, classCO2));
-			this._ctrl.addEvent(new SetContClassEvent(ticks, changes));
+			this._ctrl.addEvent(new SetContClassEvent(time + ticks, changes));
 			dispose();
 		}
     }
@@ -189,6 +196,7 @@ public class ChangeCO2ClassDialog extends JDialog implements TrafficSimObserver{
 		for(int i=0;i<11;i++) {
 			this._co2Combo.addElement(i);
 		}
+		this.time = time;
 	}
 
 }
