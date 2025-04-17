@@ -52,7 +52,6 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 	
 	ControlPanel(Controller ctrl){
 		this._ctrl=ctrl;
-		
 		this.bar=new JToolBar();
 		fileButton=new JButton();
 		co2Button=new JButton();
@@ -65,7 +64,6 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 	}
 	
 	private void initGUI() {
-		//this.setPreferredSize(new Dimension(500,100));
 		this.setLayout(new BoxLayout(this, BoxLayout.X_AXIS));
 		
 		JLabel labelSpinner=new JLabel("Ticks: ");
@@ -75,16 +73,20 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 		labelSpinner.add(spinner);
 		
 		fileButton.setIcon(new ImageIcon("resources/icons/open.png"));
+		fileButton.setToolTipText("Choose a file");
 		co2Button.setIcon(new ImageIcon("resources/icons/co2class.png"));
+		co2Button.setToolTipText("Change CO2 Class of a Vehicle");
 		weatherButton.setIcon(new ImageIcon("resources/icons/weather.png"));
+		weatherButton.setToolTipText("Change Weather of a Road");
 		execButton.setIcon(new ImageIcon("resources/icons/run.png"));
+		execButton.setToolTipText("Run the simulator");
 		stopButton.setIcon(new ImageIcon("resources/icons/stop.png"));
+		stopButton.setToolTipText("Stop the simulation");
 		exitButton.setIcon(new ImageIcon("resources/icons/exit.png"));
+		exitButton.setToolTipText("Exit");
 		
 		//file button
-		
 		fileButton.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				JFileChooser file=new JFileChooser("./resources/examples");
@@ -97,29 +99,24 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 						ex.printStackTrace();
 					}
 				}
-				
 			}
 			
 		});
 		
 		//co2 button
 		co2Dialog=new ChangeCO2ClassDialog(_ctrl, ViewUtils.getWindow(this));
-		
 		co2Button.addActionListener(e -> {
 				co2Dialog.open(ViewUtils.getWindow(this));
 		});
 		
 		//weather button
 		weatherDialog = new ChangeWeatherDialog(_ctrl, ViewUtils.getWindow(this));
-		
 		weatherButton.addActionListener(e -> {
 			weatherDialog.open(ViewUtils.getWindow(this));
 		});
 		
 		//run button
-		
 		execButton.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				co2Button.setEnabled(false);
@@ -134,30 +131,23 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 			
 		});
 		
-		
-		
 		//stop button
-		
 		stopButton.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				_stopped=true;
-				
 			}
-			
 		});
 		
 		//exit button
-		
 		exitButton.addActionListener(new ActionListener() {
-
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
-				System.exit(0);
+				int choice=JOptionPane.showConfirmDialog(null, "Are you sure you want to quit?", "Quit", JOptionPane.YES_NO_OPTION);
+				if (choice == JOptionPane.YES_OPTION) {
+		            System.exit(0);
+		        }
 			}
-			
 		});
 		
 		bar.add(fileButton);
@@ -173,7 +163,6 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 		bar.add(Box.createHorizontalGlue());
 		bar.add(exitButton);
 		this.add(bar);
-		
 		this.setVisible(true);
 	}
 	
@@ -193,7 +182,7 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 				this.weatherButton.setEnabled(true);
 			}
 		} else {
-			_stopped = false;
+			_stopped = true;
 			this.co2Button.setEnabled(true);
 			this.execButton.setEnabled(true);
 			this.exitButton.setEnabled(true);

@@ -53,7 +53,15 @@ public class JunctionsTableModel extends AbstractTableModel implements TrafficSi
 			}
 		}
 		else if(columnIndex==2) {
-			return j.getInRoads()+":"+j.getQueues();
+			String queues="";
+			for(int i=0;i<j.getInRoads().size();i++) {
+				queues+=j.getInRoads().get(i).getId()+":[";
+				for(int k=0;k<j.getQueues().get(i).size();k++) {
+					queues+=j.getQueues().get(i).get(k).getId();
+				}
+				queues+="] ";
+			}
+			return queues;
 		}
 		return null;
 	}

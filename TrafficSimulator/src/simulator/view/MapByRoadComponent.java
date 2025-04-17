@@ -68,7 +68,6 @@ public class MapByRoadComponent extends JComponent implements TrafficSimObserver
 			g.drawString("No map yet!", getWidth() / 2 - 50, getHeight() / 2);
 		} else {
 			drawComponents(graphics);
-			//drawVehicles(graphics);
 		}
 	}
 	
