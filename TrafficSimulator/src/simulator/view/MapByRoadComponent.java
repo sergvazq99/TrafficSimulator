@@ -87,8 +87,7 @@ public class MapByRoadComponent extends JComponent implements TrafficSimObserver
 			if (idx != -1 && _map.getRoads().get(i).equals(_map.getRoads().get(i).getDest().getInRoads().get(idx))) {
 				arrowColor = Color.GREEN;
 			}
-			graphics.setColor(arrowColor);
-			graphics.fillOval(x1+330, y-5, 10, 10);
+			
 			
 			for(int j=0;j<_map.getRoads().get(i).getVehicles().size();j++) {
 				int vx = x1 + (int) ((x2-x1) * ((double) _map.getRoads().get(i).getVehicles().get(j).getLocation() / (double) _map.getRoads().get(i).getLength()));
@@ -103,8 +102,10 @@ public class MapByRoadComponent extends JComponent implements TrafficSimObserver
 			
 			graphics.setColor(new Color(183, 96, 8));
 			graphics.drawString(_map.getRoads().get(i).getDest().getId(), x2, y-7);
-			graphics.drawImage(selectWeather(_map.getRoads().get(i).getWeather()), x2, y-15, 32, 32, this);
-			graphics.drawImage(selectContClass(_map.getRoads().get(i).getTotalCO2(),_map.getRoads().get(i).getContLimit()), x2+35, y-15, 32, 32, this);
+			graphics.setColor(arrowColor);
+			graphics.fillOval(x2-5, y-5, 10, 10);
+			graphics.drawImage(selectWeather(_map.getRoads().get(i).getWeather()), x2+5, y-15, 32, 32, this);
+			graphics.drawImage(selectContClass(_map.getRoads().get(i).getTotalCO2(),_map.getRoads().get(i).getContLimit()), x2+40, y-15, 32, 32, this);
 		}
 		
 	}
