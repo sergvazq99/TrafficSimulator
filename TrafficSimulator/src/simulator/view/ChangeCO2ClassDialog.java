@@ -1,6 +1,7 @@
 package simulator.view;
 
 import java.awt.BorderLayout;
+
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
@@ -158,44 +159,46 @@ public class ChangeCO2ClassDialog extends JDialog implements TrafficSimObserver{
 			dispose();
 		}
     }
+	
+	private void update(RoadMap map, Collection<Event> events) {
+		_vehiclesCombo.removeAllElements();
+	    vehicleCO2Map.clear();
+		for(Vehicle v:map.getVehicles()) {
+			this._vehiclesCombo.addElement(v.getId());
+			this.vehicleCO2Map.put(v.getId(), v.getContClass());
+		}
+		_co2Combo.removeAllElements();
+		for(int i=0;i<11;i++) {
+			this._co2Combo.addElement(i);
+		}
+	}
 
 	@Override
 	public void onAdvance(RoadMap map, Collection<Event> events, int time) {
-		
+		_vehiclesCombo.removeAllElements();
+	    vehicleCO2Map.clear();
+
+	    for (Vehicle v : map.getVehicles()) {
+	        _vehiclesCombo.addElement(v.getId());
+	        vehicleCO2Map.put(v.getId(), v.getContClass());
+	    }
+
+	    this.time = time;
 	}
 
 	@Override
 	public void onEventAdded(RoadMap map, Collection<Event> events, Event e, int time) {
-		for(Vehicle v:map.getVehicles()) {
-			this._vehiclesCombo.addElement(v.getId());
-			
-			this.vehicleCO2Map.put(v.getId(), v.getContClass());
-		}
-		for(int i=0;i<11;i++) {
-			this._co2Combo.addElement(i);
-		}
+		update(map,events);
 	}
 
 	@Override
 	public void onReset(RoadMap map, Collection<Event> events, int time) {
-		for(Vehicle v:map.getVehicles()) {
-			this._vehiclesCombo.addElement(v.getId());
-			this.vehicleCO2Map.put(v.getId(), v.getContClass());
-		}
-		for(int i=0;i<11;i++) {
-			this._co2Combo.addElement(i);
-		}
+		update(map,events);
 	}
 
 	@Override
 	public void onRegister(RoadMap map, Collection<Event> events, int time) {
-		for(Vehicle v:map.getVehicles()) {
-			this._vehiclesCombo.addElement(v.getId());
-			this.vehicleCO2Map.put(v.getId(), v.getContClass());
-		}
-		for(int i=0;i<11;i++) {
-			this._co2Combo.addElement(i);
-		}
+		update(map,events);
 		this.time = time;
 	}
 
