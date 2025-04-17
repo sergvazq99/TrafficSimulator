@@ -161,41 +161,44 @@ public class ChangeWeatherDialog extends JDialog implements TrafficSimObserver{
 			dispose();
 		}
 	}
+	
+	private void update(RoadMap map, Collection<Event> events) {
+		this._roadCombo.removeAllElements();
+		this.roadWeatherMap.clear();
+		for(Road r:map.getRoads()) {
+			this._roadCombo.addElement(r.getId());
+			this.roadWeatherMap.put(r.getId(), r.getWeather());
+		}
+		this._weatherCombo.removeAllElements();
+		for(Weather w:Weather.values()) {
+			this._weatherCombo.addElement(w);
+		}
+	}
 
 	@Override
 	public void onAdvance(RoadMap map, Collection<Event> events, int time) {
-		// TODO Auto-generated method stub
-		
+		this._roadCombo.removeAllElements();
+		this.roadWeatherMap.clear();
+		for(Road r:map.getRoads()) {
+			this._roadCombo.addElement(r.getId());
+			this.roadWeatherMap.put(r.getId(), r.getWeather());
+		}
+		this.time=time;
 	}
 
 	@Override
 	public void onEventAdded(RoadMap map, Collection<Event> events, Event e, int time) {
-		for(Road r:map.getRoads()) {
-			this._roadCombo.addElement(r.getId());
-		}
-		for(Weather w:Weather.values()) {
-			this._weatherCombo.addElement(w);
-		}
+		update(map,events);
 	}
 
 	@Override
 	public void onReset(RoadMap map, Collection<Event> events, int time) {
-		for(Road r:map.getRoads()) {
-			this._roadCombo.addElement(r.getId());
-		}
-		for(Weather w:Weather.values()) {
-			this._weatherCombo.addElement(w);
-		}
+		update(map,events);
 	}
 
 	@Override
 	public void onRegister(RoadMap map, Collection<Event> events, int time) {
-		for(Road r:map.getRoads()) {
-			this._roadCombo.addElement(r.getId());
-		}
-		for(Weather w:Weather.values()) {
-			this._weatherCombo.addElement(w);
-		}
+		update(map,events);
 		this.time = time;
 	}
 
