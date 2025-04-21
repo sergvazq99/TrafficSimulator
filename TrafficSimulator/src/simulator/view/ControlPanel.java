@@ -182,7 +182,7 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 				this.weatherButton.setEnabled(true);
 			}
 		} else {
-			_stopped = true;
+			_stopped = false;
 			this.co2Button.setEnabled(true);
 			this.execButton.setEnabled(true);
 			this.exitButton.setEnabled(true);
