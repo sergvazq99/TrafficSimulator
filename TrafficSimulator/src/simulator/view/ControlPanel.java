@@ -125,6 +125,7 @@ public class ControlPanel extends JPanel implements TrafficSimObserver{
 				fileButton.setEnabled(false);
 				stopButton.setEnabled(true);
 				weatherButton.setEnabled(false);
+				_stopped=false;
 				run_sim((int)(spinner.getValue()));
 				
 			}
