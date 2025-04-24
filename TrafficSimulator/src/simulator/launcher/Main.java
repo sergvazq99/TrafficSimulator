@@ -174,22 +174,33 @@ public class Main {
 		
 	}
 	
-	private static void startGUIMode() {
+	private static void startGUIMode() throws FileNotFoundException {
 		TrafficSimulator sim = new TrafficSimulator();
 		Controller controller = new Controller(sim, _eventsFactory);
-		if(_inFile!=null) {
-			try {
-				controller.loadEvents(new FileInputStream(_inFile));
-			} catch (FileNotFoundException e) {
-				e.printStackTrace();
+
+			OutputStream out;
+			if(_outFile == null)
+				out = System.out;
+			else
+				out = new FileOutputStream(_outFile);
+			
+			if(_viewMode) {
+				SwingUtilities.invokeLater(new Runnable() {	
+					@Override
+					public void run() {
+						new MainWindow(controller);
+					}
+				});			
+			}else {
+				if(_inFile!=null) {
+					try {
+						controller.loadEvents(new FileInputStream(_inFile));
+						controller.run(_ticks, out);
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
+					}
+				}
 			}
-		}
-		SwingUtilities.invokeLater(new Runnable() {	
-			@Override
-			public void run() {
-				new MainWindow(controller);
-			}
-		}); 
 	}
 
 	private static void start(String[] args) throws IOException {
